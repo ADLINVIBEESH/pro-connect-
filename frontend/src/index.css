@@ -1,0 +1,264 @@
+@font-face {
+  font-family: "Creato Display";
+  src: url("./assets/Fonts/CreatoDisplay-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Creato Display";
+  src: url("./assets/Fonts/CreatoDisplay-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Creato Display";
+  src: url("./assets/Fonts/CreatoDisplay-Black.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 7%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 7%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+
+    --primary: 0 0% 7%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 7%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 97%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 25 95% 58%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 75% 58%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 25 95% 58%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 7%;
+    --sidebar-primary: 0 0% 7%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 97%;
+    --sidebar-accent-foreground: 0 0% 7%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 25 95% 58%;
+
+    /* Custom tokens */
+    --hero-gradient: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 99%) 100%);
+    --card-shadow: 0 8px 24px -22px hsl(0 0% 0% / 0.18);
+    --card-shadow-hover: 0 18px 44px -30px hsl(0 0% 0% / 0.18);
+    --glow-emerald: 0 0 24px hsl(160 84% 39% / 0.1);
+    --glow-accent: 0 0 24px hsl(25 95% 53% / 0.25);
+  }
+
+  .dark {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 7%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 7%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+    --primary: 0 0% 7%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 7%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 97%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 25 95% 58%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 75% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 25 95% 58%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 7%;
+    --sidebar-primary: 0 0% 7%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 97%;
+    --sidebar-accent-foreground: 0 0% 7%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 25 95% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: "Creato Display", system-ui, sans-serif;
+    font-weight: 500;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Creato Display", system-ui, sans-serif;
+    font-weight: 900;
+    letter-spacing: 0.015em;
+  }
+
+  .dashboard-shell {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 7%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 7%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+
+    --primary: 0 0% 7%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 7%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 97%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 25 95% 58%;
+    --accent-foreground: 0 0% 100%;
+
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 25 95% 58%;
+
+    --radius: 0.25rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 7%;
+    --sidebar-primary: 0 0% 7%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 97%;
+    --sidebar-accent-foreground: 0 0% 7%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 25 95% 58%;
+
+    --card-shadow: 0 8px 24px -22px hsl(0 0% 0% / 0.16);
+    --card-shadow-hover: 0 18px 44px -30px hsl(0 0% 0% / 0.18);
+
+    --dashboard-scroll-track: hsl(0 0% 96%);
+    --dashboard-scroll-thumb: hsl(0 0% 24%);
+    --dashboard-scroll-thumb-hover: hsl(0 0% 12%);
+  }
+
+  .dashboard-shell * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--dashboard-scroll-thumb) var(--dashboard-scroll-track);
+  }
+
+  .dashboard-shell *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .dashboard-shell *::-webkit-scrollbar-track {
+    background: var(--dashboard-scroll-track);
+  }
+
+  .dashboard-shell *::-webkit-scrollbar-thumb {
+    background: var(--dashboard-scroll-thumb);
+    border-radius: 4px;
+  }
+
+  .dashboard-shell *::-webkit-scrollbar-thumb:hover {
+    background: var(--dashboard-scroll-thumb-hover);
+  }
+}
+
+@layer components {
+  .font-display {
+    letter-spacing: 0.015em;
+  }
+
+  .dashboard-card {
+    @apply rounded-[4px] border border-border bg-card card-shadow;
+  }
+
+  .dashboard-btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-[4px] border border-transparent bg-secondary px-3 py-2 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-secondary/90;
+  }
+
+  .dashboard-btn-outline {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-[4px] border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/35;
+  }
+
+  .dashboard-input {
+    @apply w-full rounded-[4px] border border-border bg-background px-3.5 py-2.5 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring;
+  }
+
+  .dashboard-label {
+    @apply mb-1 block text-[13px] font-semibold uppercase tracking-[0.12em] text-muted-foreground;
+  }
+
+  .dashboard-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--dashboard-scroll-thumb) var(--dashboard-scroll-track);
+  }
+}
+
+@layer utilities {
+  .hero-gradient {
+    background: var(--hero-gradient);
+  }
+  .card-shadow {
+    box-shadow: var(--card-shadow);
+  }
+  .card-shadow-hover {
+    box-shadow: var(--card-shadow-hover);
+  }
+  .glow-emerald {
+    box-shadow: var(--glow-emerald);
+  }
+  .glow-accent {
+    box-shadow: var(--glow-accent);
+  }
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(160 84% 39%), hsl(160 70% 55%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-accent {
+    background: linear-gradient(135deg, hsl(25 95% 53%), hsl(35 95% 60%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .glass {
+    background: hsl(0 0% 100% / 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(0 0% 0% / 0.08);
+  }
+  .glass-card {
+    background: hsl(0 0% 100% / 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(0 0% 0% / 0.08);
+  }
+}
