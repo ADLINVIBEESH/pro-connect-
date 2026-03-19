@@ -20,9 +20,27 @@ if (!hasEmailConfig()) {
   console.log(`[startup] Email service configured via ${emailConfig.description}.`);
 }
 
+const mongoUri = process.env.MONGODB_URI;
+const mongoDbName = process.env.MONGODB_DBNAME;
+const mongoOptions = {};
+
+if (mongoDbName) {
+  mongoOptions.dbName = mongoDbName;
+} else if (mongoUri) {
+  try {
+    const parsedUri = new URL(mongoUri);
+    const hasDbInUri = Boolean(parsedUri.pathname && parsedUri.pathname !== '/');
+    if (!hasDbInUri) {
+      // Preserve the previous default while keeping the URI's database when provided.
+      mongoOptions.dbName = 'proconnect-database';
+    }
+  } catch (error) {
+    // If the URI is invalid, let Mongoose surface the error without masking it here.
+  }
+}
+
 mongoose
-  // Force the Atlas connection to use the project database even if the URI omits it.
-  .connect(process.env.MONGODB_URI, { dbName: 'proconnect-database' })
+  .connect(mongoUri, mongoOptions)
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
 

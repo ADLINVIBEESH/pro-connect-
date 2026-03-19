@@ -388,9 +388,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       avatar: serverUser.avatar || buildAvatarUrl(serverUser.email),
       authProviders: serverUser.authProviders ?? (serverUser.hasPassword ? ["local"] : []),
       hasPassword: Boolean(serverUser.hasPassword),
-      profile: (serverUser.freelancerProfile?.profileData as ProfileData | undefined) ?? createEmptyProfileData(),
+      profile: (serverUser.freelancerProfile?.profileData as unknown as ProfileData | undefined) ?? createEmptyProfileData(),
       profile_last_step: previousForSameUser?.profile_last_step ?? 1,
-      client_profile: (serverUser.clientProfile?.profileData as ClientProfileData | undefined) ?? createEmptyClientProfileData(),
+      client_profile: (serverUser.clientProfile?.profileData as unknown as ClientProfileData | undefined) ?? createEmptyClientProfileData(),
       client_profile_last_step: previousForSameUser?.client_profile_last_step ?? 1,
     };
 
@@ -415,8 +415,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const response = await fetchCurrentSession();
-      return applyServerSession({ user: response.user });
+      // const response = await fetchCurrentSession();
+      // return applyServerSession({ user: response.user });
+      
+      const role = localStorage.getItem("proconnect_role") as UserRole || null;
+      return applyServerSession({
+        token: getStoredAuthToken(),
+        user: {
+          id: "mock_user",
+          email: "mock@example.com",
+          fullName: "Mock User",
+          role,
+          hasPassword: true,
+        }
+      });
     } catch {
       persist(null);
       localStorage.removeItem("proconnect_role");
@@ -432,10 +444,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const session = await loginRequest({
-      email: email.trim().toLowerCase(),
-      password,
-    });
+    // const session = await loginRequest({
+    //   email: email.trim().toLowerCase(),
+    //   password,
+    // });
+    
+    // Mock login session
+    const session: ServerSessionPayload = {
+      message: "Mock login successful",
+      token: "mock-token",
+      user: {
+        id: "mock_user",
+        email: email.trim().toLowerCase(),
+        fullName: email.split("@")[0] || "User",
+        role: localStorage.getItem("proconnect_role") as UserRole || null,
+        hasPassword: true,
+      }
+    };
 
     return applyServerSession(session);
   };
@@ -447,13 +472,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setRole = async (role: "client" | "freelancer") => {
-    const session = await selectRoleRequest(role);
+    // const session = await selectRoleRequest(role);
+    // return applyServerSession(session);
+
+    // Mock set role
+    localStorage.setItem("proconnect_role", role);
+    const session: ServerSessionPayload = {
+      message: "Mock role set",
+      token: getStoredAuthToken() || "mock-token",
+      user: {
+        id: "mock_user",
+        email: "mock@example.com",
+        fullName: "Mock User",
+        role: role,
+        hasPassword: true,
+      }
+    };
     return applyServerSession(session);
   };
 
   const saveFreelancerProfileToServer = async (profile: ProfileData) => {
     if (!getStoredAuthToken()) return;
 
+    // Mock server save
+    return Promise.resolve();
+
+    /*
     const sanitized = sanitizeProfileData(profile);
     const completion = deriveProfileCompletion(sanitized);
     const serverProfileData = buildFreelancerServerProfileData(sanitized);
@@ -467,11 +511,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       bio: sanitized.professional.overview || sanitized.personal.tagline,
       location: [sanitized.personal.city, sanitized.personal.country].filter(Boolean).join(", "),
     });
+    */
   };
 
   const saveClientProfileToServer = async (profile: ClientProfileData) => {
     if (!getStoredAuthToken()) return;
 
+    // Mock server save
+    return Promise.resolve();
+
+    /*
     const sanitized = sanitizeClientProfileData(profile);
     const completion = deriveClientProfileCompletion(sanitized);
 
@@ -480,6 +529,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       profileData: sanitized as unknown as Record<string, unknown>,
       profileCompleted: completion.profileCompleted,
     });
+    */
   };
 
   const saveProfileStep = <T extends WizardStep,>(step: T, payload: StepPayloadMap[T]) => {

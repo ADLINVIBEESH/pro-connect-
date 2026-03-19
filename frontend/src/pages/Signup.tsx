@@ -109,7 +109,7 @@ const Signup = () => {
     clearFeedback();
 
     try {
-      const response = await sendOtpRequest(normalizedEmail);
+      // const response = await sendOtpRequest(normalizedEmail);
 
       setEmail(normalizedEmail);
       setStep("otp");
@@ -118,7 +118,7 @@ const Signup = () => {
       setResendIn(RESEND_SECONDS);
       setSuccessMessage(mode === "resend" ? "New code sent." : "Code sent.");
       setUsername((current) => (current.trim() ? current : normalizedEmail.split("@")[0] ?? ""));
-      toast.success(response.message);
+      toast.success(mode === "resend" ? "New mocked code sent." : "Mock code sent.");
     } catch (error) {
       const message = getErrorMessage(error);
       setErrorMessage(message);
@@ -142,15 +142,15 @@ const Signup = () => {
     clearFeedback();
 
     try {
-      const response = await verifyOtpRequest(normalizedEmail, cleanOtp);
+      // const response = await verifyOtpRequest(normalizedEmail, cleanOtp);
 
       setOtp(cleanOtp);
-      setVerifiedUserId(response.userId);
+      setVerifiedUserId("mock_user_id");
       setStep("account");
       setResendIn(0);
       setSuccessMessage("Email verified.");
       setUsername((current) => (current.trim() ? current : normalizedEmail.split("@")[0] ?? ""));
-      toast.success(response.message);
+      toast.success("Mock verification successful");
     } catch (error) {
       const message = getErrorMessage(error);
       setErrorMessage(message);
@@ -193,16 +193,30 @@ const Signup = () => {
     clearFeedback();
 
     try {
+      /*
       const response = await completeSignupRequest({
         userId: verifiedUserId,
         username: normalizedUsername,
         fullName: fullName.trim(),
         password,
       });
+      */
+
+      const response = {
+        token: "mock-token",
+        user: {
+          id: "mock_" + normalizedUsername,
+          email: normalizedEmail,
+          fullName: fullName.trim(),
+          role: null as any,
+          hasPassword: true,
+        },
+        message: "Account created successfully"
+      };
 
       applyServerSession({
         token: response.token,
-        user: response.user,
+        user: response.user as any,
       });
       toast.success(response.message);
       navigate("/role-select");
@@ -236,14 +250,26 @@ const Signup = () => {
     clearFeedback();
 
     try {
-      const credential = await requestGoogleCredential();
-      const session = await googleAuthRequest(credential);
+      // const credential = await requestGoogleCredential();
+      // const session = await googleAuthRequest(credential);
+      const session = {
+        token: "mock-token",
+        user: {
+          id: "mock_google_id",
+          email: "google@example.com",
+          fullName: "Google User",
+          role: null as any,
+          hasPassword: false,
+        },
+        message: "Signed in with Google"
+      };
+
       applyServerSession({
         token: session.token,
-        user: session.user,
+        user: session.user as any,
       });
       toast.success(session.message ?? "Signed in with Google.");
-      navigate(session.user.role ? (session.user.role === "client" ? "/client-dashboard" : "/dashboard") : "/role-select");
+      navigate("/role-select");
     } catch (error) {
       const message = getErrorMessage(error);
       setErrorMessage(message);

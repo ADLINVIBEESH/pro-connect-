@@ -81,13 +81,13 @@ const Login = () => {
     setResetErrorMessage("");
 
     try {
-      const response = await sendPasswordResetOtpRequest(cleanEmail);
+      // const response = await sendPasswordResetOtpRequest(cleanEmail);
       setEmail(cleanEmail);
       setResetEmail(cleanEmail);
       setResetStep("verify");
       setResetOtp("");
       setResetMessage(`Code sent to ${cleanEmail}. Enter it below and choose a new password.`);
-      toast.success(response.message);
+      toast.success("Mock reset OTP sent.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to send OTP right now.";
       setResetErrorMessage(message);
@@ -120,8 +120,20 @@ const Login = () => {
     setErrorMessage("");
 
     try {
-      const credential = await requestGoogleCredential();
-      const session = await googleAuthRequest(credential);
+      // const credential = await requestGoogleCredential();
+      // const session = await googleAuthRequest(credential);
+      const session = {
+        token: "mock-token",
+        user: {
+          id: "mock_google_id",
+          email: "google@example.com",
+          fullName: "Google User",
+          role: localStorage.getItem("proconnect_role") as any,
+          hasPassword: false,
+        },
+        message: "Signed in with Google"
+      };
+      
       const sessionUser = applyServerSession(session);
       navigateForUser(sessionUser.role);
     } catch (error) {
@@ -176,11 +188,25 @@ const Login = () => {
     setResetErrorMessage("");
 
     try {
+      /*
       const session = await resetPasswordRequest({
         email: cleanEmail,
         otp: cleanOtp,
         password: newPassword,
       });
+      */
+      const session = {
+        token: "mock-token",
+        user: {
+          id: "mock_reset_id",
+          email: cleanEmail,
+          fullName: cleanEmail.split("@")[0] || "User",
+          role: localStorage.getItem("proconnect_role") as any,
+          hasPassword: true,
+        },
+        message: "Password reset successfully."
+      };
+      
       const sessionUser = applyServerSession(session);
       setPassword("");
       toast.success(session.message ?? "Password reset successfully.");
