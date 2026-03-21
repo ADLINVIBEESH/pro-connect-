@@ -2,7 +2,6 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { sanitizeProfileData } from "@/lib/profileCompletion";
 import { DashboardTopbar } from "@/components/dashboard/DashboardTopbar";
-import DashboardFooter from "@/components/dashboard/DashboardFooter";
 import FreelancerSelfProfileView from "@/components/profile/FreelancerSelfProfileView";
 
 const FreelancerProfileView = () => {
@@ -27,10 +26,6 @@ const FreelancerProfileView = () => {
             onEditProfile={() => navigate("/profile-completion")}
           />
         </main>
-
-        <div className="mx-auto w-full max-w-[1520px] px-4 pb-6 lg:px-8">
-          <DashboardFooter />
-        </div>
       </div>
     </div>
   );

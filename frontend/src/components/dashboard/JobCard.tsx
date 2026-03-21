@@ -73,7 +73,7 @@ const JobCard = ({ job, isSaved = false, onSaveToggle, showSaveButton = true }: 
             </span>
           ))}
         </div>
-        <div className="mt-3 rounded-[10px] bg-black px-4 py-2.5 text-center text-xs font-semibold text-white transition-opacity group-hover:opacity-85">
+        <div className="mt-3 rounded-[10px] bg-gradient-to-r from-primary to-accent px-4 py-2.5 text-center text-xs font-semibold text-white transition-opacity group-hover:opacity-85">
           View Details
         </div>
       </Link>

@@ -81,14 +81,14 @@ const meetingTimeOptions = ["Early morning", "Morning", "Afternoon", "Evening", 
 const notificationOptions = ["Email updates", "SMS alerts", "In-app notifications", "Weekly digest"];
 const paymentMethodOptions = ["Bank transfer", "UPI", "PayPal", "Wise", "Stripe", "Milestone escrow"];
 const phoneCodes = ["+1", "+44", "+49", "+61", "+65", "+81", "+91", "+971"];
-const clientDomainSuggestions = CLIENT_INDUSTRY_OPTIONS.map((option) => option.label);
+const clientDomainSuggestions = CLIENT_INDUSTRY_OPTIONS;
 
 const inputClass =
-  "mt-2.5 h-11 w-full rounded-[16px] border border-black/10 bg-white px-3.5 text-[15px] text-[#111111] outline-none transition placeholder:text-black/35 hover:border-black/18 focus:border-[#f28c28]/60 focus:ring-4 focus:ring-[#f28c28]/10 disabled:cursor-not-allowed disabled:opacity-55";
+  "mt-2.5 h-11 w-full rounded-[16px] border border-border bg-muted/30 px-3.5 text-[15px] text-foreground outline-none transition placeholder:text-muted-foreground/50 hover:border-primary/30 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-55";
 const textareaClass =
-  "mt-2.5 min-h-[132px] w-full rounded-[18px] border border-black/10 bg-white px-3.5 py-3 text-[15px] text-[#111111] outline-none transition placeholder:text-black/35 hover:border-black/18 focus:border-[#f28c28]/60 focus:ring-4 focus:ring-[#f28c28]/10";
+  "mt-2.5 min-h-[132px] w-full rounded-[18px] border border-border bg-muted/30 px-3.5 py-3 text-[15px] text-foreground outline-none transition placeholder:text-muted-foreground/50 hover:border-primary/30 focus:border-primary/50 focus:ring-4 focus:ring-primary/10";
 const panelClass = "space-y-4";
-const mutedLabelClass = "text-[0.72rem] font-semibold uppercase tracking-[0.26em] text-black/42";
+const mutedLabelClass = "text-[0.72rem] font-semibold uppercase tracking-[0.26em] text-muted-foreground/70";
 
 const createProject = (): ClientPastProject => ({
   id: `client-project-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -108,7 +108,7 @@ const readProjectMediaPreview = async (file: File) => {
 
 const StepHeading = ({ title, subtitle: _subtitle }: { title: string; subtitle: string }) => (
   <div className="space-y-1.5 pb-1 text-left">
-    <h2 className="font-display text-[2rem] font-black tracking-[-0.05em] text-[#111111] sm:text-[2.65rem]">{title}</h2>
+    <h2 className="font-display text-[2rem] font-black tracking-[-0.05em] text-foreground sm:text-[2.65rem]">{title}</h2>
   </div>
 );
 
@@ -154,23 +154,23 @@ const TagInput = ({
 
   return (
     <div>
-      <label htmlFor={id} className="text-[0.82rem] font-semibold uppercase tracking-[0.24em] text-black/48">
+      <label htmlFor={id} className="text-[0.82rem] font-semibold uppercase tracking-[0.24em] text-muted-foreground/70">
         {label}
       </label>
 
-      <div className="mt-2.5 rounded-[18px] border border-black/10 bg-white px-3.5 py-3 transition hover:border-black/18 focus-within:border-[#f28c28]/60 focus-within:ring-4 focus-within:ring-[#f28c28]/10">
+      <div className="mt-2.5 rounded-[18px] border border-border bg-muted/30 px-3.5 py-3 transition hover:border-primary/30 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10">
         <div className="flex flex-wrap gap-2">
           {values.map((value) => (
             <span
               key={value}
-              className="inline-flex items-center gap-2 rounded-full border border-[#f28c28]/20 bg-[#f28c28]/10 px-3 py-1.5 text-sm font-medium text-[#ffb15a]"
+              className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary"
             >
               {value}
               <button
                 type="button"
                 aria-label={`Remove ${value}`}
                 onClick={() => onChange(values.filter((entry) => entry !== value))}
-                className="rounded-full text-[#ffb15a] transition hover:text-[#111111]"
+                className="rounded-full text-primary transition hover:text-foreground"
               >
                 x
               </button>
@@ -188,7 +188,7 @@ const TagInput = ({
               }
             }}
             placeholder={values.length === 0 ? placeholder : "Type and press Enter"}
-            className="min-w-[180px] flex-1 border-0 bg-transparent px-1 py-1 text-base text-[#111111] outline-none placeholder:text-black/35"
+            className="min-w-[180px] flex-1 border-0 bg-transparent px-1 py-1 text-base text-foreground outline-none placeholder:text-muted-foreground/50"
           />
         </div>
       </div>
@@ -200,7 +200,7 @@ const TagInput = ({
               key={suggestion}
               type="button"
               onClick={() => addTag(suggestion)}
-              className="rounded-full border border-black/10 bg-white px-3 py-1.5 text-[15px] font-medium text-black/78 transition hover:border-[#f28c28]/45 hover:text-[#b85f09]"
+              className="rounded-full border border-border bg-muted/30 px-3 py-1.5 text-[15px] font-medium text-muted-foreground transition hover:border-primary/40 hover:text-primary"
             >
               {suggestion}
             </button>
@@ -208,7 +208,7 @@ const TagInput = ({
         </div>
       )}
 
-      {helperText && <p className="mt-3 text-sm leading-7 text-black/54">{helperText}</p>}
+      {helperText && <p className="mt-3 text-sm leading-7 text-muted-foreground">{helperText}</p>}
       <FieldError message={error} />
     </div>
   );
@@ -603,7 +603,22 @@ const ClientProfileCompletionWizard = () => {
   };
 
   const navigateToStep = (target: ClientWizardStep) => {
-    if (!canOpenStep(target)) return;
+    if (!canOpenStep(target)) {
+      for (let step = 1; step < target; step += 1) {
+        if (Object.values(getErrors(step as ClientWizardStep)).some(Boolean)) {
+          toast({
+            title: "Missing Information",
+            description: `Please complete Step ${step} to continue.`,
+            variant: "destructive",
+          });
+          setAttemptedSteps((previous) => ({ ...previous, [step]: true }));
+          setCurrentStep(step as ClientWizardStep);
+          setClientProfileLastStep(step as ClientWizardStep);
+          return;
+        }
+      }
+      return;
+    }
 
     persistStep(currentStep);
     void saveClientProfileToServer(draft).catch((error) => {
@@ -715,7 +730,7 @@ const ClientProfileCompletionWizard = () => {
           className="mx-auto flex min-h-[56dvh] w-full max-w-4xl items-center justify-center px-2 text-center"
         >
           <div className="space-y-10">
-            <h1 className="font-display text-[2.65rem] font-black leading-[1.05] tracking-[-0.06em] text-[#111111] sm:text-[4.5rem]">
+            <h1 className="font-display text-[2.65rem] font-black leading-[1.05] tracking-[-0.06em] text-foreground sm:text-[4.5rem]">
               <TypingHeadline text={introScreens[0]} onComplete={() => setHeadlineFinished(true)} />
             </h1>
 
@@ -747,10 +762,10 @@ const ClientProfileCompletionWizard = () => {
         className="mx-auto flex min-h-[56dvh] w-full max-w-3xl items-center justify-center px-2 text-center"
       >
         <div className="space-y-6">
-          <h1 className="font-display text-[2.4rem] font-black leading-[1.08] tracking-[-0.05em] text-[#111111] sm:text-[4rem]">
+          <h1 className="font-display text-[2.4rem] font-black leading-[1.08] tracking-[-0.05em] text-foreground sm:text-[4rem]">
             {introScreens[1]}
           </h1>
-          <p className="mx-auto max-w-2xl text-[1rem] leading-8 text-black/58 sm:text-[1.1rem]">
+          <p className="mx-auto max-w-2xl text-[1rem] leading-8 text-muted-foreground sm:text-[1.1rem]">
             Take a few minutes to complete your profile so others can understand who you are and what you offer.
           </p>
           <button type="button" onClick={() => setIntroStep(2)} className={primaryButtonClass}>
@@ -769,7 +784,7 @@ const ClientProfileCompletionWizard = () => {
         <StepHeading title={currentMeta.title} subtitle={currentMeta.subtitle} />
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
-          <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-black/10 bg-white">
+          <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-border bg-muted/30">
             {hasProfilePhoto ? (
               <img
                 src={draft.basic.profilePhoto}
@@ -777,12 +792,12 @@ const ClientProfileCompletionWizard = () => {
                 className="h-full w-full object-cover"
               />
             ) : (
-              <UploadCloud className="h-8 w-8 text-black/35" />
+              <UploadCloud className="h-8 w-8 text-muted-foreground" />
             )}
           </div>
 
           <div className="space-y-2.5">
-            <p className="text-sm leading-6 text-black/56">
+            <p className="text-sm leading-6 text-muted-foreground">
               Upload a company logo or a profile photo freelancers can recognize instantly.
             </p>
             <div className="flex flex-wrap items-center gap-3">

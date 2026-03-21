@@ -61,10 +61,10 @@ const socialFields: Array<{ key: keyof SocialLinks; label: string; placeholder: 
   { key: "instagram", label: "Instagram", placeholder: "https://instagram.com/username" },
 ];
 
-const fieldLabelClass = "text-[0.82rem] font-semibold uppercase tracking-[0.24em] text-black/48";
-const helperTextClass = "text-sm leading-6 text-black/56";
+const fieldLabelClass = "text-[0.82rem] font-semibold uppercase tracking-[0.24em] text-muted-foreground";
+const helperTextClass = "text-sm leading-6 text-muted-foreground";
 const projectUploadClass =
-  "rounded-[1.75rem] border border-dashed border-black/12 bg-white px-5 py-10 text-center transition hover:border-black/22";
+  "rounded-[1.75rem] border border-dashed border-border bg-card px-5 py-10 text-center transition hover:border-secondary/30";
 
 const createProject = (): PortfolioProjectItem => ({
   id: `project-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -102,7 +102,7 @@ const readProjectMediaPreview = async (file: File) => {
 
 const renderMediaPreview = (media: ProfileMediaMeta, label: string) => {
   if (!media.preview) {
-    return <div className="flex h-full items-center justify-center px-4 text-center text-xs text-black/45">{media.name}</div>;
+    return <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">{media.name}</div>;
   }
 
   if (media.type.startsWith("image/")) {
@@ -117,7 +117,7 @@ const renderMediaPreview = (media: ProfileMediaMeta, label: string) => {
     return <video src={media.preview} className="h-full w-full object-cover" muted playsInline preload="metadata" />;
   }
 
-  return <div className="flex h-full items-center justify-center px-4 text-center text-xs text-black/45">{media.name}</div>;
+  return <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">{media.name}</div>;
 };
 
 const getProjectLabel = (project: PortfolioProjectItem, index: number) =>
@@ -743,7 +743,7 @@ const ProfileCompletionWizard = () => {
           className="mx-auto flex min-h-[56dvh] w-full max-w-4xl items-center justify-center px-2 text-center"
         >
           <div className="space-y-10">
-            <h1 className="font-display text-[2.65rem] font-black leading-[1.05] tracking-[-0.06em] text-[#111111] sm:text-[4.5rem]">
+            <h1 className="font-display text-[2.65rem] font-black leading-[1.05] tracking-[-0.06em] text-foreground sm:text-[4.5rem]">
               <TypingHeadline text={introScreens[0]} onComplete={() => setHeadlineFinished(true)} />
             </h1>
 
@@ -775,10 +775,10 @@ const ProfileCompletionWizard = () => {
         className="mx-auto flex min-h-[56dvh] w-full max-w-3xl items-center justify-center px-2 text-center"
       >
         <div className="space-y-6">
-          <h1 className="font-display text-[2.4rem] font-black leading-[1.08] tracking-[-0.05em] text-[#111111] sm:text-[4rem]">
+          <h1 className="font-display text-[2.4rem] font-black leading-[1.08] tracking-[-0.05em] text-foreground sm:text-[4rem]">
             {introScreens[1]}
           </h1>
-          <p className="mx-auto max-w-2xl text-[1rem] leading-8 text-black/58 sm:text-[1.1rem]">
+          <p className="mx-auto max-w-2xl text-[1rem] leading-8 text-muted-foreground sm:text-[1.1rem]">
             Take a few minutes to complete your profile so others can understand who you are and what you offer.
           </p>
           <button type="button" onClick={() => setIntroStep(2)} className={primaryButtonClass}>
@@ -798,11 +798,11 @@ const ProfileCompletionWizard = () => {
 
         <div className="grid gap-8 lg:grid-cols-[152px_minmax(0,1fr)] lg:items-start">
           <div className="flex flex-col items-start gap-4">
-            <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border border-black/8 bg-[#d8d5d3]">
+            <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
               {hasProfilePhoto ? (
                 <img src={draft.personal.profilePhoto} alt={draft.personal.fullName || user.name} className="h-full w-full object-cover" />
               ) : (
-                <UploadCloud className="h-8 w-8 text-black/30" />
+                <UploadCloud className="h-8 w-8 text-muted-foreground" />
               )}
             </div>
 
@@ -820,7 +820,7 @@ const ProfileCompletionWizard = () => {
 
           <div className="space-y-7">
             <div className="space-y-3">
-              <p className="max-w-2xl text-[1rem] leading-7 text-black/62">
+              <p className="max-w-2xl text-[1rem] leading-7 text-muted-foreground">
                 Add a clear profile photo so clients can recognize and trust you faster.
               </p>
               <div className="flex flex-wrap items-center gap-3">
@@ -902,7 +902,7 @@ const ProfileCompletionWizard = () => {
                     value={displayedPhoneCode}
                     readOnly
                     placeholder="Code"
-                    className={cn(profileInputClass, "bg-white/70 text-black/60")}
+                    className={cn(profileInputClass, "bg-muted/60 text-muted-foreground")}
                   />
                 </div>
 
@@ -989,7 +989,7 @@ const ProfileCompletionWizard = () => {
                   </div>
                 ) : null}
 
-                <p className="text-sm leading-6 text-black/52">Select up to 6 languages you can use comfortably with clients.</p>
+                <p className="text-sm leading-6 text-muted-foreground">Select up to 6 languages you can use comfortably with clients.</p>
                 <FieldError message={attemptedSteps[1] ? currentErrors.languages : ""} />
               </div>
             </div>
@@ -1038,7 +1038,7 @@ const ProfileCompletionWizard = () => {
       <StepTitle title={currentMeta.title} />
 
       <div className="space-y-2">
-        <p className="max-w-3xl text-[15px] leading-7 text-black/62">
+        <p className="max-w-3xl text-[15px] leading-7 text-muted-foreground">
           Choose the domains you have mastered. Clicking a domain reveals only that domain&apos;s subdomains so the
           step stays focused and easy to scan.
         </p>
@@ -1047,7 +1047,7 @@ const ProfileCompletionWizard = () => {
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <label className={fieldLabelClass}>Domains Mastered</label>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/40">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             {selectedDomains.length} selected
           </p>
         </div>
@@ -1068,8 +1068,8 @@ const ProfileCompletionWizard = () => {
                   isSelected
                     ? isActive
                       ? "border-[#f28c28]/50 bg-[#fff5ea] text-[#111111]"
-                      : "border-black/10 bg-white text-black/84"
-                    : "border-black/8 bg-transparent text-black/64 hover:border-black/18 hover:text-[#111111]"
+                      : "border-border bg-card text-foreground"
+                    : "border-border bg-transparent text-muted-foreground hover:border-secondary/30 hover:text-foreground"
                 )}
               >
                 <span
@@ -1077,14 +1077,14 @@ const ProfileCompletionWizard = () => {
                     "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition",
                     isSelected
                       ? "border-[#f28c28]/60 bg-[#f28c28] text-[#180c02]"
-                      : "border-black/14 bg-transparent text-transparent"
+                      : "border-border bg-transparent text-transparent"
                   )}
                 >
                   <Check className="h-3.5 w-3.5" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold">{domain}</span>
-                  <span className="mt-0.5 block text-xs text-black/42">
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
                     {selectedCount > 0 ? `${selectedCount} subdomains selected` : `${options.length} subdomains`}
                   </span>
                 </span>
@@ -1114,7 +1114,7 @@ const ProfileCompletionWizard = () => {
                     "flex min-h-[50px] cursor-pointer items-center gap-3 rounded-[16px] border px-4 py-3 text-sm transition",
                     isChecked
                       ? "border-[#f28c28]/40 bg-[#fff5ea] text-[#111111]"
-                      : "border-black/8 text-black/68 hover:border-black/18 hover:text-[#111111]"
+                      : "border-border text-muted-foreground hover:border-secondary/30 hover:text-foreground"
                   )}
                 >
                   <input
@@ -1172,7 +1172,7 @@ const ProfileCompletionWizard = () => {
         {draft.portfolio.projects.length === 0 ? (
           <div className="space-y-3 py-6">
             <p className="text-xl font-semibold text-[#111111]">No projects added yet</p>
-            <p className="max-w-xl text-sm leading-7 text-black/50">
+            <p className="max-w-xl text-sm leading-7 text-muted-foreground">
               Add portfolio projects with descriptions, skills, and media so clients can quickly understand the quality of your work.
             </p>
           </div>
@@ -1192,7 +1192,7 @@ const ProfileCompletionWizard = () => {
                       "inline-flex h-11 items-center justify-center rounded-full border px-4 text-sm font-semibold transition",
                       isActive
                         ? "border-[#f28c28]/45 bg-[#f28c28]/10 text-[#ffb15a]"
-                        : "border-black/10 bg-white text-black/72 hover:border-black/18 hover:text-[#111111]"
+                        : "border-border bg-card text-muted-foreground hover:border-secondary/30 hover:text-foreground"
                     )}
                   >
                     {getProjectLabel(project, index)}
@@ -1297,9 +1297,9 @@ const ProfileCompletionWizard = () => {
                       draggingProjectId === activeProject.id && "border-[#f28c28]/45 bg-[#f28c28]/10"
                     )}
                   >
-                    <UploadCloud className="mx-auto h-8 w-8 text-black/36" />
+                    <UploadCloud className="mx-auto h-8 w-8 text-muted-foreground" />
                     <p className="mt-4 text-sm font-semibold text-[#111111]">Drag and drop project images or videos here</p>
-                    <p className="mt-2 text-sm leading-7 text-black/52">Up to 8 files. Images and videos only.</p>
+                    <p className="mt-2 text-sm leading-7 text-muted-foreground">Up to 8 files. Images and videos only.</p>
                   </div>
 
                   {activeProject.images.length > 0 ? (
@@ -1307,15 +1307,15 @@ const ProfileCompletionWizard = () => {
                       {activeProject.images.map((media) => (
                         <div
                           key={`${media.name}-${media.lastModified}`}
-                          className="overflow-hidden rounded-[1.4rem] border border-black/10 bg-white"
+                          className="overflow-hidden rounded-[1.4rem] border border-border bg-card"
                         >
-                          <div className="aspect-[16/10] bg-white">{renderMediaPreview(media, media.name)}</div>
+                          <div className="aspect-[16/10] bg-card">{renderMediaPreview(media, media.name)}</div>
                           <div className="flex items-center justify-between gap-3 px-3 py-3">
-                            <p className="line-clamp-2 text-xs font-medium text-black/58">{media.name}</p>
+                            <p className="line-clamp-2 text-xs font-medium text-muted-foreground">{media.name}</p>
                             <button
                               type="button"
                               onClick={() => removeProjectMedia(activeProject.id, media)}
-                              className="rounded-full p-1 text-black/54 transition hover:bg-black/5 hover:text-[#111111]"
+                              className="rounded-full p-1 text-muted-foreground transition hover:bg-muted/30 hover:text-foreground"
                               aria-label={`Remove ${media.name}`}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -1363,11 +1363,11 @@ const ProfileCompletionWizard = () => {
       <StepTitle title={currentMeta.title} />
 
       <div className="space-y-4">
-        <div className="flex flex-col gap-4 border-b border-black/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className={fieldLabelClass}>Publish</p>
             <h3 className="mt-2 text-xl font-semibold text-[#111111]">Your freelancer profile is ready for final review</h3>
-            <p className="mt-2 max-w-2xl text-base leading-8 text-black/58">
+            <p className="mt-2 max-w-2xl text-base leading-8 text-muted-foreground">
               The preview below uses the exact freelancer profile component that will render under your dashboard profile page.
             </p>
           </div>
@@ -1376,7 +1376,7 @@ const ProfileCompletionWizard = () => {
           </div>
         </div>
 
-        <label className="flex items-start gap-3 rounded-[16px] border border-black/10 bg-white p-4">
+        <label className="flex items-start gap-3 rounded-[16px] border border-border bg-card p-4">
           <input
             type="checkbox"
             checked={draft.finalReview.termsAccepted}
@@ -1389,9 +1389,9 @@ const ProfileCompletionWizard = () => {
                 },
               }))
             }
-            className="mt-1 h-4 w-4 rounded border-black/15 bg-transparent accent-[#f28c28]"
+            className="mt-1 h-4 w-4 rounded border-border bg-transparent accent-secondary"
           />
-          <span className="text-sm leading-7 text-black/62">
+          <span className="text-sm leading-7 text-muted-foreground">
             I confirm that this freelancer profile accurately represents my experience, skills, portfolio, and availability.
           </span>
         </label>

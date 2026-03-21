@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Bell, User, LogOut, ChevronDown, Search } from "lucide-react";
+import { Zap, Bell, User, LogOut, ChevronDown, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchMyJobsRequest } from "@/lib/networkApi";
@@ -27,8 +27,6 @@ const getDashboardNavItems = (role: "freelancer" | "client"): DashboardNavItem[]
         { label: "Applied Works", path: "/dashboard/applications", requiresProfileComplete: true },
         { label: "Saved Jobs", path: "/dashboard/saved", requiresProfileComplete: true },
         { label: "Messages", path: "/dashboard/messages" },
-        { label: "Profile", path: "/profile" },
-        { label: "Settings", path: "/dashboard/settings" },
       ]
     : [];
 
@@ -38,8 +36,6 @@ const getClientNavItems = (basePath: string): DashboardNavItem[] => [
   { label: "My Jobs", path: `${basePath}/my-jobs` },
   { label: "Post a Job", path: `${basePath}/post-job` },
   { label: "Messages", path: `${basePath}/messages` },
-  { label: "Profile", path: `${basePath}/profile` },
-  { label: "Settings", path: `${basePath}/settings` },
 ];
 
 const NotificationBell = ({ dashboardBasePath }: { dashboardBasePath: string }) => {
@@ -78,7 +74,7 @@ const NotificationBell = ({ dashboardBasePath }: { dashboardBasePath: string }) 
     <div className="relative">
       <button
         onClick={() => setOpen((current) => !current)}
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
       >
         <Bell className="h-[18px] w-[18px]" />
         {notifications.length > 0 ? (
@@ -122,7 +118,7 @@ const NotificationBell = ({ dashboardBasePath }: { dashboardBasePath: string }) 
                       setOpen(false);
                       navigate(`${dashboardBasePath}/job/${notification.jobId}`);
                     }}
-                    className="w-full p-3 text-left transition-colors hover:bg-muted/35"
+                    className="w-full p-3 text-left transition-colors hover:bg-muted/25"
                   >
                     <div className="flex items-start gap-2.5">
                       <img src={notification.freelancerAvatar} alt="" className="h-8 w-8 rounded-[6px] bg-muted object-cover shrink-0" />
@@ -151,33 +147,19 @@ export const DashboardTopbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [jobSearch, setJobSearch] = useState("");
   const clientBasePath = location.pathname.startsWith("/client-dashboard") ? "/client-dashboard" : "/dashboard";
   const dashboardBasePath = user?.role === "client" ? clientBasePath : "/dashboard";
   const profilePath = user?.role === "freelancer" ? "/profile" : `${clientBasePath}/profile`;
   const profileLabel = user?.role === "freelancer" ? "View Profile" : "Profile";
 
-  useEffect(() => {
-    const searchValue = new URLSearchParams(location.search).get("search") ?? "";
-    setJobSearch(searchValue);
-  }, [location.search]);
-
   const handleLogout = () => {
-    logout();
     navigate("/");
+    setTimeout(() => {
+      logout();
+    }, 10);
   };
 
-  const handleSearchSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
 
-    if (user?.role !== "freelancer") {
-      navigate(`${clientBasePath}/my-jobs`);
-      return;
-    }
-
-    const trimmed = jobSearch.trim();
-    navigate(trimmed ? `/dashboard/find-work?search=${encodeURIComponent(trimmed)}` : "/dashboard/find-work");
-  };
 
   if (!user) return null;
 
@@ -187,11 +169,11 @@ export const DashboardTopbar = () => {
     path === dashboardBasePath ? location.pathname === dashboardBasePath : location.pathname.startsWith(path);
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-background/92 backdrop-blur-sm">
+    <header className="sticky top-0 z-20 border-b border-border bg-card/60 backdrop-blur-xl">
       <div className="mx-auto flex max-w-[1520px] flex-col gap-3 px-4 py-3 lg:px-8 lg:py-3.5">
         <div className="flex flex-wrap items-center gap-3 xl:flex-nowrap">
           <Link to={dashboardBasePath} className="flex shrink-0 items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary shadow-[0_14px_32px_-20px_rgba(25,178,166,0.62)]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary shadow-[0_14px_32px_-20px_hsl(170,80%,45%,0.4)]">
               <Zap className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -207,9 +189,9 @@ export const DashboardTopbar = () => {
               {navItems.map((item) => {
                 const locked = isIncompleteFreelancer && !!item.requiresProfileComplete;
                 const navClass = cn(
-                  "inline-flex h-9 shrink-0 items-center rounded-full px-3 text-[0.94rem] font-display leading-none transition-colors",
-                  isActive(item.path) ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
-                  locked && "cursor-not-allowed text-muted-foreground/45 hover:text-muted-foreground/45",
+                  "inline-flex h-9 shrink-0 items-center rounded-full px-3 text-[0.94rem] font-display leading-none transition-all",
+                  isActive(item.path) ? "bg-gradient-to-r from-primary to-accent text-white shadow-[0_0_16px_hsl(250,60%,55%,0.2)]" : "text-muted-foreground hover:text-foreground hover:bg-muted/25",
+                  locked && "cursor-not-allowed text-muted-foreground/35 hover:text-muted-foreground/35",
                 );
 
                 if (locked) {
@@ -233,8 +215,8 @@ export const DashboardTopbar = () => {
             <NotificationBell dashboardBasePath={dashboardBasePath} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2.5 text-foreground transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20">
-                  <img src={user.avatar} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
+                <button className="flex items-center gap-2.5 text-foreground transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-secondary/20">
+                  <img src={user.avatar} alt={user.name} className="h-10 w-10 rounded-full object-cover ring-2 ring-border" />
                   <div className="hidden text-left sm:block">
                     <p className="font-display text-[0.98rem] leading-none text-foreground">{user.name}</p>
                     <p className="mt-1 font-display text-[0.8rem] leading-none text-muted-foreground">
@@ -244,11 +226,17 @@ export const DashboardTopbar = () => {
                   <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 rounded-[12px] border border-border bg-popover text-popover-foreground">
+              <DropdownMenuContent align="end" className="w-48 rounded-[12px] border border-border bg-card text-foreground">
                 <DropdownMenuItem asChild>
                   <Link to={profilePath}>
                     <User className="mr-2 h-4 w-4" />
                     {profileLabel}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to={`${dashboardBasePath}/settings`}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
@@ -260,17 +248,6 @@ export const DashboardTopbar = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSearchSubmit}>
-          <label className="relative block">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={jobSearch}
-              onChange={(event) => setJobSearch(event.target.value)}
-              placeholder={user.role === "freelancer" ? "Search for jobs" : "Search dashboard"}
-              className="h-11 w-full rounded-[4px] border border-border bg-card pl-10 pr-4 text-[0.96rem] font-display text-foreground outline-none transition placeholder:text-muted-foreground focus:border-accent/70 focus:ring-4 focus:ring-accent/10"
-            />
-          </label>
-        </form>
       </div>
     </header>
   );

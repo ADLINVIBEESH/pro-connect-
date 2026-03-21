@@ -4,24 +4,24 @@ import { cn } from "@/lib/utils";
 import { canonicalizeSkillName } from "@/lib/profileCompletion";
 
 export const profileInputClass =
-  "mt-2.5 h-11 w-full rounded-[16px] border border-black/10 bg-white px-3.5 text-[15px] text-[#111111] outline-none transition placeholder:text-black/35 hover:border-black/18 focus:border-[#f28c28]/60 focus:ring-4 focus:ring-[#f28c28]/10 disabled:cursor-not-allowed disabled:opacity-55";
+  "mt-2.5 h-11 w-full rounded-[16px] border border-border bg-muted/40 px-3.5 text-[15px] text-foreground outline-none transition placeholder:text-muted-foreground hover:border-border focus:border-secondary/50 focus:ring-4 focus:ring-secondary/10 disabled:cursor-not-allowed disabled:opacity-55";
 export const profileTextareaClass =
-  "mt-2.5 min-h-[132px] w-full rounded-[18px] border border-black/10 bg-white px-3.5 py-3 text-[15px] text-[#111111] outline-none transition placeholder:text-black/35 hover:border-black/18 focus:border-[#f28c28]/60 focus:ring-4 focus:ring-[#f28c28]/10";
+  "mt-2.5 min-h-[132px] w-full rounded-[18px] border border-border bg-muted/40 px-3.5 py-3 text-[15px] text-foreground outline-none transition placeholder:text-muted-foreground hover:border-border focus:border-secondary/50 focus:ring-4 focus:ring-secondary/10";
 export const primaryButtonClass =
-  "inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#f28c28] px-5 text-sm font-semibold text-[#170b02] shadow-[0_18px_40px_-22px_rgba(242,140,40,0.75)] transition hover:bg-[#ff9e43] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#f28c28]/18 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-5 text-sm font-semibold text-white shadow-[0_18px_40px_-22px_hsl(250,60%,55%,0.5)] transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/18 disabled:cursor-not-allowed disabled:opacity-60";
 export const secondaryButtonClass =
-  "inline-flex h-11 items-center justify-center gap-2 rounded-full border border-black/10 bg-white px-4 text-sm font-semibold text-black/78 transition hover:border-black/18 hover:text-black";
+  "inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-semibold text-foreground transition hover:border-secondary/40 hover:text-foreground";
 export const pillButtonClass =
-  "rounded-full border border-black/10 bg-white px-3 py-2 text-sm font-medium text-black/74 transition hover:border-[#f28c28]/36 hover:text-[#b85f09]";
+  "rounded-full border border-border bg-card px-3 py-2 text-sm font-medium text-muted-foreground transition hover:border-secondary/36 hover:text-secondary";
 
 export const StepTitle = ({ title }: { title: string }) => (
   <div className="max-w-3xl space-y-1.5 text-left">
-    <h1 className="font-display text-[2rem] font-black tracking-[-0.05em] text-[#111111] sm:text-[2.65rem]">{title}</h1>
+    <h1 className="font-display text-[2rem] font-black tracking-[-0.05em] text-foreground sm:text-[2.65rem]">{title}</h1>
   </div>
 );
 
 export const FieldError = ({ message }: { message?: string }) =>
-  message ? <p className="mt-2 text-sm font-medium text-[#ff8d8d]">{message}</p> : null;
+  message ? <p className="mt-2 text-sm font-medium text-destructive">{message}</p> : null;
 
 export const TagInput = ({
   id,
@@ -65,24 +65,24 @@ export const TagInput = ({
   return (
     <div className="space-y-2.5">
       <div>
-        <label htmlFor={id} className="text-[0.82rem] font-semibold uppercase tracking-[0.24em] text-black/48">
+        <label htmlFor={id} className="text-[0.82rem] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
           {label}
         </label>
 
-        <div className="mt-2.5 rounded-[18px] border border-black/10 bg-white px-3.5 py-3 transition hover:border-black/18 focus-within:border-[#f28c28]/60 focus-within:ring-4 focus-within:ring-[#f28c28]/10">
+        <div className="mt-2.5 rounded-[18px] border border-border bg-muted/40 px-3.5 py-3 transition hover:border-border focus-within:border-secondary/50 focus-within:ring-4 focus-within:ring-secondary/10">
           {values.length > 0 ? (
             <div className="mb-2.5 flex flex-wrap gap-2">
               {values.map((value) => (
                 <span
                   key={value}
-                  className="inline-flex items-center gap-2 rounded-full border border-[#f28c28]/20 bg-[#f28c28]/10 px-3 py-1.5 text-sm font-medium text-[#ffb15a]"
+                  className="inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/10 px-3 py-1.5 text-sm font-medium text-secondary"
                 >
                   {value}
                   <button
                     type="button"
                     aria-label={`Remove ${value}`}
                     onClick={() => onChange(values.filter((entry) => entry !== value))}
-                    className="rounded-full text-[#ffb15a] transition hover:text-[#111111]"
+                    className="rounded-full text-secondary transition hover:text-foreground"
                   >
                     x
                   </button>
@@ -104,12 +104,12 @@ export const TagInput = ({
               }
             }}
             placeholder={placeholder}
-            className="w-full bg-transparent text-[15px] text-[#111111] outline-none placeholder:text-black/35"
+            className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground"
           />
         </div>
       </div>
 
-      {helperText ? <p className="text-sm leading-6 text-black/56">{helperText}</p> : null}
+      {helperText ? <p className="text-sm leading-6 text-muted-foreground">{helperText}</p> : null}
       <FieldError message={error} />
 
       {filteredSuggestions.length > 0 ? (
@@ -147,8 +147,8 @@ export const TogglePill = ({
     className={cn(
       "rounded-full border px-4 py-2 text-sm font-semibold transition",
       active
-        ? "border-[#f28c28]/40 bg-[#fff5ea] text-[#b85f09]"
-        : "border-black/10 bg-white text-black/74 hover:border-black/18 hover:text-[#111111]",
+        ? "border-secondary/40 bg-secondary/15 text-secondary"
+        : "border-border bg-card text-muted-foreground hover:border-secondary/30 hover:text-foreground",
       className
     )}
   >

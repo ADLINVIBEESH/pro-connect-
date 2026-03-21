@@ -32,14 +32,21 @@ const RoleSelect = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/50 px-4">
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+      {/* Animated background orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="orb orb-float-slow orb-pulse absolute -left-40 top-1/4 h-[450px] w-[450px] bg-[hsl(250,60%,25%)] opacity-35" />
+        <div className="orb orb-float-medium absolute -right-32 bottom-1/4 h-[400px] w-[400px] bg-[hsl(170,80%,25%)] opacity-30" />
+        <div className="orb orb-float-fast absolute left-1/2 top-0 h-[300px] w-[300px] -translate-x-1/2 bg-[hsl(280,60%,20%)] opacity-20" />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-xl text-center"
+        className="relative w-full max-w-xl text-center"
       >
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center glow-emerald">
             <Zap className="w-5 h-5 text-secondary-foreground" />
           </div>
           <span className="text-2xl font-display font-bold text-foreground">ProConnect</span>
@@ -56,9 +63,9 @@ const RoleSelect = () => {
             whileTap={{ scale: 0.98 }}
             onClick={() => void handleSelect("client")}
             disabled={isSaving}
-            className="p-8 rounded-2xl bg-card card-shadow border-2 border-border hover:border-accent text-left transition-colors group"
+            className="p-8 rounded-2xl glass-card border border-border hover:border-accent/50 text-left transition-all group hover:shadow-[0_0_30px_hsl(280,80%,60%,0.15)]"
           >
-            <div className="w-14 h-14 rounded-xl bg-accent/10 text-accent flex items-center justify-center mb-5 group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
+            <div className="w-14 h-14 rounded-xl bg-accent/15 text-accent flex items-center justify-center mb-5 group-hover:bg-accent group-hover:text-white transition-colors group-hover:shadow-[0_0_20px_hsl(280,80%,60%,0.3)]">
               <Briefcase className="w-7 h-7" />
             </div>
             <h3 className="text-xl font-display font-semibold text-foreground mb-2">I want to Hire</h3>
@@ -70,9 +77,9 @@ const RoleSelect = () => {
             whileTap={{ scale: 0.98 }}
             onClick={() => void handleSelect("freelancer")}
             disabled={isSaving}
-            className="p-8 rounded-2xl bg-card card-shadow border-2 border-border hover:border-secondary text-left transition-colors group"
+            className="p-8 rounded-2xl glass-card border border-border hover:border-secondary/50 text-left transition-all group hover:shadow-[0_0_30px_hsl(170,80%,45%,0.15)]"
           >
-            <div className="w-14 h-14 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center mb-5 group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors">
+            <div className="w-14 h-14 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center mb-5 group-hover:bg-secondary group-hover:text-white transition-colors group-hover:shadow-[0_0_20px_hsl(170,80%,45%,0.3)]">
               <Code className="w-7 h-7" />
             </div>
             <h3 className="text-xl font-display font-semibold text-foreground mb-2">I want to Work</h3>

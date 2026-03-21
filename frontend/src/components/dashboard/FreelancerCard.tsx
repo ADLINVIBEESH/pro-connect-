@@ -40,7 +40,7 @@ const FreelancerCard = ({ freelancer }: { freelancer: FreelancerSummary }) => {
       </div>
       <Link
         to={`/profile/${freelancer.userId}`}
-        className="mt-4 inline-flex w-full items-center justify-center rounded-[10px] bg-black px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-85"
+        className="mt-4 inline-flex w-full items-center justify-center rounded-[10px] bg-gradient-to-r from-primary to-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-85"
       >
         View Details
       </Link>

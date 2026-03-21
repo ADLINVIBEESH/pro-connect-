@@ -38,7 +38,7 @@ const DashboardFooter = () => (
           <p className="text-[1.18rem] font-display font-semibold text-foreground">{group.title}</p>
           <div className="mt-4 space-y-3">
             {group.links.map((link) => (
-              <a key={link} href="#" className="block text-[15px] leading-8 text-muted-foreground transition hover:text-foreground">
+              <a key={link} href="#" className="block text-[15px] leading-8 text-muted-foreground transition hover:text-secondary">
                 {link}
               </a>
             ))}
@@ -53,7 +53,7 @@ const DashboardFooter = () => (
           <a
             key={index}
             href="#"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card transition hover:border-accent/60 hover:text-accent"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/50 transition hover:border-secondary/50 hover:text-secondary hover:shadow-[0_0_12px_hsl(170,80%,45%,0.15)]"
           >
             <Icon className="h-[18px] w-[18px]" />
           </a>

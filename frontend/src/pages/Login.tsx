@@ -221,44 +221,39 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <div className="relative hidden flex-1 items-center justify-center overflow-hidden p-12 hero-gradient lg:flex">
-        <div className="absolute inset-0 opacity-10">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full border border-white/20"
-              style={{
-                width: `${120 + i * 80}px`,
-                height: `${120 + i * 80}px`,
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-              }}
-            />
-          ))}
-        </div>
+    <div className="relative flex min-h-screen overflow-hidden">
+      {/* Animated background orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="orb orb-float-slow orb-pulse absolute -left-32 -top-32 h-[500px] w-[500px] bg-[hsl(250,60%,25%)] opacity-40" />
+        <div className="orb orb-float-medium absolute -bottom-20 -right-20 h-[400px] w-[400px] bg-[hsl(170,80%,25%)] opacity-30" />
+        <div className="orb orb-float-fast absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 bg-[hsl(280,60%,20%)] opacity-20" />
+      </div>
 
-        <div className="relative text-center">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary shadow-lg">
-            <Zap className="h-8 w-8 text-secondary-foreground" />
-          </div>
-          <h2 className="mb-4 text-4xl font-display font-bold tracking-[0.015em] text-white">ProConnect</h2>
-          <p className="mx-auto max-w-xs text-[19px] tracking-[0.012em] text-white/68">
-            The professional marketplace connecting talent worldwide.
-          </p>
-          <div className="mt-12 flex justify-center gap-10">
-            {stats.map(([value, label]) => (
-              <div key={label} className="text-center">
-                <div className="text-2xl font-display font-bold text-secondary">{value}</div>
-                <div className="mt-0.5 text-[13px] text-white/56">{label}</div>
-              </div>
-            ))}
+      {/* Left hero panel */}
+      <div className="relative hidden flex-1 items-center justify-center overflow-hidden p-12 lg:flex">
+        <div className="glass-card rounded-3xl p-12">
+          <div className="relative text-center">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary shadow-lg glow-emerald">
+              <Zap className="h-8 w-8 text-secondary-foreground" />
+            </div>
+            <h2 className="mb-4 text-4xl font-display font-bold tracking-[0.015em] text-foreground">ProConnect</h2>
+            <p className="mx-auto max-w-xs text-[19px] tracking-[0.012em] text-muted-foreground">
+              The professional marketplace connecting talent worldwide.
+            </p>
+            <div className="mt-12 flex justify-center gap-10">
+              {stats.map(([value, label]) => (
+                <div key={label} className="text-center">
+                  <div className="text-2xl font-display font-bold text-gradient">{value}</div>
+                  <div className="mt-0.5 text-[13px] text-muted-foreground">{label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-1 items-center justify-center px-8 py-12 lg:max-w-md">
+      {/* Right form panel */}
+      <div className="relative flex flex-1 items-center justify-center px-8 py-12 lg:max-w-md">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -266,7 +261,7 @@ const Login = () => {
           className="w-full max-w-sm"
         >
           <Link to="/" className="mb-10 inline-flex items-center gap-2 lg:hidden">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary glow-emerald">
               <Zap className="h-4 w-4 text-secondary-foreground" />
             </div>
             <span className="text-lg font-display font-bold text-foreground">ProConnect</span>
@@ -302,7 +297,7 @@ const Login = () => {
           {isForgotPasswordFlow ? (
             <>
               {resetErrorMessage ? (
-                <div className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                <div className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                   {resetErrorMessage}
                 </div>
               ) : null}
@@ -328,7 +323,7 @@ const Login = () => {
                           setResetEmail(e.target.value);
                           if (resetErrorMessage) setResetErrorMessage("");
                         }}
-                        className="w-full rounded-xl border border-border bg-muted/60 py-3 pl-10 pr-4 text-[15px] text-foreground transition-all placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full rounded-xl border border-border bg-muted/40 py-3 pl-10 pr-4 text-[15px] text-foreground transition-all placeholder:text-muted-foreground focus:border-secondary/50 focus:outline-none focus:ring-2 focus:ring-secondary/20"
                         placeholder="you@example.com"
                         required
                       />
@@ -338,7 +333,7 @@ const Login = () => {
                   <button
                     type="submit"
                     disabled={isSendingResetOtp}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3 text-[15px] font-semibold text-accent-foreground shadow-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent py-3 text-[15px] font-semibold text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {isSendingResetOtp ? <LoadingSpinner className="h-4 w-4" /> : null}
                     <span>{isSendingResetOtp ? "Sending OTP..." : "Send OTP"}</span>
@@ -361,7 +356,7 @@ const Login = () => {
                           setResetEmail(e.target.value);
                           if (resetErrorMessage) setResetErrorMessage("");
                         }}
-                        className="w-full rounded-xl border border-border bg-muted/60 py-3 pl-10 pr-4 text-[15px] text-foreground transition-all placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full rounded-xl border border-border bg-muted/40 py-3 pl-10 pr-4 text-[15px] text-foreground transition-all placeholder:text-muted-foreground focus:border-secondary/50 focus:outline-none focus:ring-2 focus:ring-secondary/20"
                         placeholder="you@example.com"
                         required
                       />
@@ -383,7 +378,7 @@ const Login = () => {
                         <span>{isSendingResetOtp ? "Resending..." : "Resend code"}</span>
                       </button>
                     </div>
-                    <div className="rounded-2xl border border-border bg-muted/30 px-3 py-4">
+                    <div className="rounded-2xl border border-border bg-muted/20 px-3 py-4">
                       <InputOTP
                         id="reset-otp"
                         maxLength={OTP_LENGTH}
@@ -395,12 +390,12 @@ const Login = () => {
                         aria-label="One-time password"
                       >
                         <InputOTPGroup className="w-full justify-center gap-1.5">
-                          <InputOTPSlot index={0} className="h-11 w-9 rounded-xl border border-border bg-card text-sm font-semibold first:rounded-xl first:border last:rounded-xl" />
-                          <InputOTPSlot index={1} className="h-11 w-9 rounded-xl border border-border bg-card text-sm font-semibold first:rounded-xl first:border last:rounded-xl" />
-                          <InputOTPSlot index={2} className="h-11 w-9 rounded-xl border border-border bg-card text-sm font-semibold first:rounded-xl first:border last:rounded-xl" />
-                          <InputOTPSlot index={3} className="h-11 w-9 rounded-xl border border-border bg-card text-sm font-semibold first:rounded-xl first:border last:rounded-xl" />
-                          <InputOTPSlot index={4} className="h-11 w-9 rounded-xl border border-border bg-card text-sm font-semibold first:rounded-xl first:border last:rounded-xl" />
-                          <InputOTPSlot index={5} className="h-11 w-9 rounded-xl border border-border bg-card text-sm font-semibold first:rounded-xl first:border last:rounded-xl" />
+                          <InputOTPSlot index={0} className="h-11 w-9 rounded-xl border border-border bg-card text-sm font-semibold text-foreground first:rounded-xl first:border last:rounded-xl" />
+                          <InputOTPSlot index={1} className="h-11 w-9 rounded-xl border border-border bg-card text-sm font-semibold text-foreground first:rounded-xl first:border last:rounded-xl" />
+                          <InputOTPSlot index={2} className="h-11 w-9 rounded-xl border border-border bg-card text-sm font-semibold text-foreground first:rounded-xl first:border last:rounded-xl" />
+                          <InputOTPSlot index={3} className="h-11 w-9 rounded-xl border border-border bg-card text-sm font-semibold text-foreground first:rounded-xl first:border last:rounded-xl" />
+                          <InputOTPSlot index={4} className="h-11 w-9 rounded-xl border border-border bg-card text-sm font-semibold text-foreground first:rounded-xl first:border last:rounded-xl" />
+                          <InputOTPSlot index={5} className="h-11 w-9 rounded-xl border border-border bg-card text-sm font-semibold text-foreground first:rounded-xl first:border last:rounded-xl" />
                         </InputOTPGroup>
                       </InputOTP>
                     </div>
@@ -420,7 +415,7 @@ const Login = () => {
                           setNewPassword(e.target.value);
                           if (resetErrorMessage) setResetErrorMessage("");
                         }}
-                        className="w-full rounded-xl border border-border bg-muted/60 py-3 pl-10 pr-10 text-[15px] text-foreground transition-all placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full rounded-xl border border-border bg-muted/40 py-3 pl-10 pr-10 text-[15px] text-foreground transition-all placeholder:text-muted-foreground focus:border-secondary/50 focus:outline-none focus:ring-2 focus:ring-secondary/20"
                         placeholder="At least 8 characters"
                         required
                       />
@@ -448,7 +443,7 @@ const Login = () => {
                           setConfirmPassword(e.target.value);
                           if (resetErrorMessage) setResetErrorMessage("");
                         }}
-                        className="w-full rounded-xl border border-border bg-muted/60 py-3 pl-10 pr-10 text-[15px] text-foreground transition-all placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full rounded-xl border border-border bg-muted/40 py-3 pl-10 pr-10 text-[15px] text-foreground transition-all placeholder:text-muted-foreground focus:border-secondary/50 focus:outline-none focus:ring-2 focus:ring-secondary/20"
                         placeholder="Repeat your new password"
                         required
                       />
@@ -474,14 +469,14 @@ const Login = () => {
                         setResetMessage("");
                       }}
                       disabled={isResetBusy}
-                      className="flex-1 rounded-xl border border-border bg-background py-3 text-[15px] font-semibold text-foreground transition-colors hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-70"
+                      className="flex-1 rounded-xl border border-border bg-muted/30 py-3 text-[15px] font-semibold text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       Change email
                     </button>
                     <button
                       type="submit"
                       disabled={isResettingPassword}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent py-3 text-[15px] font-semibold text-accent-foreground shadow-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent py-3 text-[15px] font-semibold text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {isResettingPassword ? <LoadingSpinner className="h-4 w-4" /> : null}
                       <span>{isResettingPassword ? "Resetting..." : "Reset & Sign In"}</span>
@@ -494,7 +489,7 @@ const Login = () => {
           ) : (
             <>
               {errorMessage ? (
-                <div className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                <div className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                   {errorMessage}
                 </div>
               ) : null}
@@ -514,7 +509,7 @@ const Login = () => {
                         setEmail(e.target.value);
                         if (errorMessage) setErrorMessage("");
                       }}
-                      className="w-full rounded-xl border border-border bg-muted/60 py-3 pl-10 pr-4 text-[15px] text-foreground transition-all placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+                      className="w-full rounded-xl border border-border bg-muted/40 py-3 pl-10 pr-4 text-[15px] text-foreground transition-all placeholder:text-muted-foreground focus:border-secondary/50 focus:outline-none focus:ring-2 focus:ring-secondary/20"
                       placeholder="you@example.com"
                       required
                     />
@@ -544,7 +539,7 @@ const Login = () => {
                         setPassword(e.target.value);
                         if (errorMessage) setErrorMessage("");
                       }}
-                      className="w-full rounded-xl border border-border bg-muted/60 py-3 pl-10 pr-10 text-[15px] text-foreground transition-all placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+                      className="w-full rounded-xl border border-border bg-muted/40 py-3 pl-10 pr-10 text-[15px] text-foreground transition-all placeholder:text-muted-foreground focus:border-secondary/50 focus:outline-none focus:ring-2 focus:ring-secondary/20"
                       placeholder="Enter your password"
                       required
                     />
@@ -561,7 +556,7 @@ const Login = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3 text-[15px] font-semibold text-accent-foreground shadow-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent py-3 text-[15px] font-semibold text-white shadow-sm transition-all hover:opacity-90 hover:shadow-[0_0_24px_hsl(250,60%,55%,0.3)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isSubmitting ? <LoadingSpinner className="h-4 w-4" /> : null}
                   <span>{isSubmitting ? "Signing In..." : "Sign In"}</span>
