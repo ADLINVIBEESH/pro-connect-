@@ -279,4 +279,76 @@
   .dashboard-scroll::-webkit-scrollbar-thumb:hover {
     background: hsl(228 20% 35%);
   }
+
+  /* ── Hide scrollbar utility ── */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  /* ── Custom date/time picker styling ── */
+  input[type="date"],
+  input[type="time"] {
+    color-scheme: dark;
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.7) sepia(1) saturate(3) hue-rotate(200deg);
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    padding: 4px;
+    border-radius: 6px;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator:hover,
+  input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+
+  input[type="date"]::-webkit-datetime-edit,
+  input[type="time"]::-webkit-datetime-edit {
+    font-family: inherit;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+  input[type="time"]::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+  }
+
+  input[type="date"]::-webkit-datetime-edit-day-field,
+  input[type="date"]::-webkit-datetime-edit-month-field,
+  input[type="date"]::-webkit-datetime-edit-year-field,
+  input[type="time"]::-webkit-datetime-edit-hour-field,
+  input[type="time"]::-webkit-datetime-edit-minute-field,
+  input[type="time"]::-webkit-datetime-edit-ampm-field {
+    padding: 2px 4px;
+    border-radius: 6px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  input[type="date"]::-webkit-datetime-edit-day-field:focus,
+  input[type="date"]::-webkit-datetime-edit-month-field:focus,
+  input[type="date"]::-webkit-datetime-edit-year-field:focus,
+  input[type="time"]::-webkit-datetime-edit-hour-field:focus,
+  input[type="time"]::-webkit-datetime-edit-minute-field:focus,
+  input[type="time"]::-webkit-datetime-edit-ampm-field:focus {
+    background-color: hsl(var(--primary) / 0.2);
+    color: hsl(var(--primary));
+    outline: none;
+  }
+
+  input[type="date"]::-webkit-datetime-edit-text {
+    color: hsl(var(--muted-foreground));
+    padding: 0 2px;
+  }
 }

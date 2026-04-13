@@ -45,6 +45,28 @@ export interface DeleteAccountPayload {
   googleCredential?: string;
 }
 
+export interface Notification {
+  _id: string;
+  recipientId: string;
+  senderId: {
+    _id: string;
+    fullName: string;
+    avatar: string;
+    email: string;
+  };
+  type: string;
+  jobId?: {
+    _id: string;
+    title: string;
+    description: string;
+    clientId: string;
+    status: string;
+  };
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
 export const fetchFreelancersRequest = () =>
   apiRequest<{ freelancers: FreelancerSummary[] }>("/api/users/freelancers");
 
@@ -64,3 +86,30 @@ export type ServerProfilePayload = {
     clientProfile?: ServerClientProfile | null;
   };
 };
+
+export const saveFreelancerRequest = (freelancerId: string) =>
+  apiRequest<{ message: string }>(`/api/users/save-freelancer/${freelancerId}`, { method: "POST" });
+
+export const removeSavedFreelancerRequest = (freelancerId: string) =>
+  apiRequest<{ message: string }>(`/api/users/save-freelancer/${freelancerId}`, { method: "DELETE" });
+
+export const fetchSavedFreelancersRequest = () =>
+  apiRequest<{ freelancers: FreelancerSummary[] }>("/api/users/saved-freelancers");
+
+export const notifyUserRequest = (userId: string, payload: { message: string; type?: string; jobId?: string }) =>
+  apiRequest<{ message: string }>(`/api/users/${userId}/notify`, {
+    method: "POST",
+    body: payload,
+  });
+
+export const fetchNotificationsRequest = () =>
+  apiRequest<{ notifications: Notification[] }>("/api/users/notifications");
+
+export const markNotificationReadRequest = (id: string) =>
+  apiRequest<{ message: string }>(`/api/users/notifications/${id}/read`, { method: "PUT" });
+
+export const deleteNotificationRequest = (id: string) =>
+  apiRequest<{ message: string }>(`/api/users/notifications/${id}`, { method: "DELETE" });
+
+export const deleteAllNotificationsRequest = () =>
+  apiRequest<{ message: string }>("/api/users/notifications", { method: "DELETE" });

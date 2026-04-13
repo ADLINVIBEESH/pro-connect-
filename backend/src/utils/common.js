@@ -21,6 +21,10 @@ const normalizeRole = (value = "") => {
   return validRoles.has(normalized) ? normalized : "";
 };
 
+const isClientRole = (value) => normalizeRole(value) === "client";
+
+const isFreelancerRole = (value) => normalizeRole(value) === "freelancer";
+
 const isPlainObject = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
 const sanitizeString = (value = "", maxLength = 5000) => String(value ?? "").trim().slice(0, maxLength);
@@ -47,6 +51,8 @@ const parseStringArray = (value, maxItems = 20, maxItemLength = 120) =>
 
 module.exports = {
   isPlainObject,
+  isClientRole,
+  isFreelancerRole,
   normalizeEmail,
   normalizeRole,
   normalizeUsername,

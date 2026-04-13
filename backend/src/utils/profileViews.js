@@ -1,5 +1,5 @@
 const { buildAvatarUrl, serializeClientProfile, serializeFreelancerProfile, serializeUser } = require("./session");
-const { isPlainObject, sanitizeNumber, sanitizeString, sanitizeStringArray } = require("./common");
+const { isPlainObject, normalizeRole, sanitizeNumber, sanitizeString, sanitizeStringArray } = require("./common");
 
 const getNestedArray = (source, path) => {
   let current = source;
@@ -112,7 +112,7 @@ const getClientSummary = ({ user, profile }) => {
 };
 
 const buildReadOnlyProfilePayload = ({ user, freelancerProfile, clientProfile }) => {
-  const role = user.role ?? null;
+  const role = normalizeRole(user.role) || null;
   const userPayload = serializeUser(user, {
     freelancerProfile: serializeFreelancerProfile(freelancerProfile),
     clientProfile: serializeClientProfile(clientProfile),

@@ -302,29 +302,40 @@ const DashboardHome = () => {
               <h2 className="mt-3 font-display text-xl font-semibold text-foreground">
                 {user.profile_completed ? "Keep your profile sharp" : "Complete your profile"}
               </h2>
-              <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">
+              <p
+                className={`mt-2 text-sm leading-6 text-muted-foreground ${user.profile_completed ? "" : "flex-1"}`}
+              >
                 {user.profile_completed
                   ? "Refresh skills and portfolio to improve visibility."
                   : "Finish onboarding to unlock Find Work, Applied Works, and Saved Jobs."}
               </p>
-              <button
-                type="button"
-                onClick={() => navigate("/profile-completion")}
-                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_20px_hsl(250_60%_55%/0.3)] transition hover:opacity-90"
-              >
-                {user.profile_completed ? "Update Profile" : "Complete Profile"}
-                <ArrowRight className="h-4 w-4" />
-              </button>
+              {!user.profile_completed ? (
+                <button
+                  type="button"
+                  onClick={() => navigate("/profile-completion")}
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_20px_hsl(250_60%_55%/0.3)] transition hover:opacity-90"
+                >
+                  Complete Profile
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              ) : (
+                <Link
+                  to="/profile"
+                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-secondary transition hover:underline"
+                >
+                  View Profile
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
             </div>
           </GlowCard>
         </motion.div>
       </div>
 
       {/* ── Stats row ───────────────────────────────────────────── */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <StatCard i={0} label="Contracts Done" value={contractsDone} meta="Confirmed hires across your applications" />
         <StatCard i={1} label="Applications" value={freelancerApps.length} meta="Total jobs you have applied for" />
-        <StatCard i={2} label="Profile Strength" value={`${profilePct}%`} meta="Progress based on your onboarding data" />
       </div>
 
       {/* ── Quick actions + sidebar ──────────────────────────────── */}
@@ -471,13 +482,9 @@ const DashboardHome = () => {
                   : "Add your title, skills, portfolio, and links to boost visibility."}
               </p>
 
-              <button
-                type="button"
-                onClick={() => navigate("/profile-completion")}
-                className="mt-4 w-full rounded-xl border border-border bg-muted/30 py-2 text-xs font-semibold text-foreground transition hover:border-primary/30 hover:bg-muted/50"
-              >
-                {user.profile_completed ? "Update Profile" : "Complete Profile"}
-              </button>
+              <p className="mt-4 text-xs leading-6 text-muted-foreground">
+                If you want to update the profile further, you can update in the profile tab.
+              </p>
             </div>
           </GlowCard>
 

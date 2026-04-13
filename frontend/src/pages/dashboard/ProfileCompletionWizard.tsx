@@ -1171,7 +1171,7 @@ const ProfileCompletionWizard = () => {
 
         {draft.portfolio.projects.length === 0 ? (
           <div className="space-y-3 py-6">
-            <p className="text-xl font-semibold text-[#111111]">No projects added yet</p>
+            <p className="text-xl font-semibold text-white">No projects added yet</p>
             <p className="max-w-xl text-sm leading-7 text-muted-foreground">
               Add portfolio projects with descriptions, skills, and media so clients can quickly understand the quality of your work.
             </p>
@@ -1191,8 +1191,8 @@ const ProfileCompletionWizard = () => {
                     className={cn(
                       "inline-flex h-11 items-center justify-center rounded-full border px-4 text-sm font-semibold transition",
                       isActive
-                        ? "border-[#f28c28]/45 bg-[#f28c28]/10 text-[#ffb15a]"
-                        : "border-border bg-card text-muted-foreground hover:border-secondary/30 hover:text-foreground"
+                        ? "border-[#f28c28]/45 bg-[#f28c28]/10 text-white"
+                        : "border-border bg-card text-white hover:border-secondary/30"
                     )}
                   >
                     {getProjectLabel(project, index)}
@@ -1205,7 +1205,7 @@ const ProfileCompletionWizard = () => {
               <div className="space-y-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="space-y-2">
-                    <h2 className="text-2xl font-semibold text-[#111111]">
+                    <h2 className="text-2xl font-semibold text-white">
                       {getProjectLabel(activeProject, activeProjectIndex >= 0 ? activeProjectIndex : 0)}
                     </h2>
                     <p className={helperTextClass}>Describe the brief, your role, and the outcome.</p>
@@ -1366,7 +1366,7 @@ const ProfileCompletionWizard = () => {
         <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className={fieldLabelClass}>Publish</p>
-            <h3 className="mt-2 text-xl font-semibold text-[#111111]">Your freelancer profile is ready for final review</h3>
+            <h3 className="mt-2 text-xl font-semibold text-white">Your freelancer profile is ready for final review</h3>
             <p className="mt-2 max-w-2xl text-base leading-8 text-muted-foreground">
               The preview below uses the exact freelancer profile component that will render under your dashboard profile page.
             </p>

@@ -9,6 +9,8 @@ const { createMailer, getTransportConfig, hasEmailConfig } = require("../config/
 const { verifyGoogleCredential } = require("../utils/googleAuth");
 const {
   isPlainObject,
+  isClientRole,
+  isFreelancerRole,
   normalizeEmail,
   normalizeRole,
   normalizeUsername,
@@ -527,11 +529,18 @@ router.post("/select-role", requireAuth, async (req, res) => {
       return res.status(403).json({ message: "Complete signup before selecting a role." });
     }
 
-    if (user.role && user.role !== role) {
+    const currentRole = normalizeRole(user.role);
+
+    if (currentRole && currentRole !== role) {
       return res.status(409).json({ message: "Role already selected for this account." });
     }
 
-    if (user.role === role) {
+    if (currentRole === role) {
+      if (user.role !== role) {
+        user.role = role;
+        await user.save();
+      }
+
       return res.status(200).json({
         message: "Role already selected.",
         ...(await createSessionResponse(user)),
@@ -607,7 +616,7 @@ router.put("/freelancer-profile", requireAuth, async (req, res) => {
       return res.status(401).json({ message: "Invalid or expired session. Please log in again." });
     }
 
-    if (user.role !== "freelancer") {
+    if (!isFreelancerRole(user.role)) {
       return res.status(403).json({ message: "Only freelancer accounts can update freelancer profiles." });
     }
 
@@ -677,7 +686,7 @@ router.put("/client-profile", requireAuth, async (req, res) => {
       return res.status(401).json({ message: "Invalid or expired session. Please log in again." });
     }
 
-    if (user.role !== "client") {
+    if (!isClientRole(user.role)) {
       return res.status(403).json({ message: "Only client accounts can update client profiles." });
     }
 

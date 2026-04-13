@@ -6,7 +6,14 @@ const Job = require("../models/Job");
 const SavedJob = require("../models/SavedJob");
 const User = require("../models/User");
 const requireAuth = require("../middleware/requireAuth");
-const { isPlainObject, sanitizeNumber, sanitizeString, sanitizeStringArray } = require("../utils/common");
+const {
+  isClientRole,
+  isFreelancerRole,
+  isPlainObject,
+  sanitizeNumber,
+  sanitizeString,
+  sanitizeStringArray,
+} = require("../utils/common");
 const { buildAvatarUrl } = require("../utils/session");
 
 const router = express.Router();
@@ -119,7 +126,7 @@ router.get("/jobs/mine", requireAuth, async (req, res) => {
       return res.status(401).json({ message: "Invalid or expired session. Please log in again." });
     }
 
-    if (user.role !== "client") {
+    if (!isClientRole(user.role)) {
       return res.status(403).json({ message: "Only client accounts can view posted jobs." });
     }
 
@@ -191,7 +198,7 @@ router.post("/jobs", requireAuth, async (req, res) => {
       return res.status(401).json({ message: "Invalid or expired session. Please log in again." });
     }
 
-    if (user.role !== "client") {
+    if (!isClientRole(user.role)) {
       return res.status(403).json({ message: "Only client accounts can post jobs." });
     }
 
@@ -253,7 +260,7 @@ router.delete("/jobs/:jobId", requireAuth, async (req, res) => {
       return res.status(401).json({ message: "Invalid or expired session. Please log in again." });
     }
 
-    if (user.role !== "client") {
+    if (!isClientRole(user.role)) {
       return res.status(403).json({ message: "Only client accounts can delete jobs." });
     }
 
@@ -290,7 +297,7 @@ router.post("/jobs/:jobId/applications", requireAuth, async (req, res) => {
       return res.status(401).json({ message: "Invalid or expired session. Please log in again." });
     }
 
-    if (user.role !== "freelancer") {
+    if (!isFreelancerRole(user.role)) {
       return res.status(403).json({ message: "Only freelancer accounts can apply to jobs." });
     }
 
@@ -353,7 +360,7 @@ router.get("/jobs/:jobId/applications", requireAuth, async (req, res) => {
       return res.status(401).json({ message: "Invalid or expired session. Please log in again." });
     }
 
-    if (user.role !== "client") {
+    if (!isClientRole(user.role)) {
       return res.status(403).json({ message: "Only client accounts can view applicants." });
     }
 
@@ -390,7 +397,7 @@ router.get("/applications/mine", requireAuth, async (req, res) => {
       return res.status(401).json({ message: "Invalid or expired session. Please log in again." });
     }
 
-    if (user.role !== "freelancer") {
+    if (!isFreelancerRole(user.role)) {
       return res.status(403).json({ message: "Only freelancer accounts can view applications." });
     }
 
@@ -432,7 +439,7 @@ router.patch("/applications/:applicationId/status", requireAuth, async (req, res
       return res.status(401).json({ message: "Invalid or expired session. Please log in again." });
     }
 
-    if (user.role !== "client") {
+    if (!isClientRole(user.role)) {
       return res.status(403).json({ message: "Only client accounts can update application status." });
     }
 
@@ -473,7 +480,7 @@ router.get("/saved-jobs", requireAuth, async (req, res) => {
       return res.status(401).json({ message: "Invalid or expired session. Please log in again." });
     }
 
-    if (user.role !== "freelancer") {
+    if (!isFreelancerRole(user.role)) {
       return res.status(403).json({ message: "Only freelancer accounts can view saved jobs." });
     }
 
@@ -503,7 +510,7 @@ router.post("/saved-jobs/:jobId", requireAuth, async (req, res) => {
       return res.status(401).json({ message: "Invalid or expired session. Please log in again." });
     }
 
-    if (user.role !== "freelancer") {
+    if (!isFreelancerRole(user.role)) {
       return res.status(403).json({ message: "Only freelancer accounts can save jobs." });
     }
 
@@ -540,7 +547,7 @@ router.delete("/saved-jobs/:jobId", requireAuth, async (req, res) => {
       return res.status(401).json({ message: "Invalid or expired session. Please log in again." });
     }
 
-    if (user.role !== "freelancer") {
+    if (!isFreelancerRole(user.role)) {
       return res.status(403).json({ message: "Only freelancer accounts can remove saved jobs." });
     }
 

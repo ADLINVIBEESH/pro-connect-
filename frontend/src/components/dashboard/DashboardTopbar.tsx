@@ -5,6 +5,7 @@ import { Zap, Bell, User, LogOut, ChevronDown, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchMyJobsRequest } from "@/lib/networkApi";
+import { fetchNotificationsRequest } from "@/lib/userApi";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -12,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { InvitationModal } from "./InvitationModal";
 
 type DashboardNavItem = {
   label: string;
@@ -41,34 +43,69 @@ const getClientNavItems = (basePath: string): DashboardNavItem[] => [
 const NotificationBell = ({ dashboardBasePath }: { dashboardBasePath: string }) => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [selectedInvite, setSelectedInvite] = useState<any | null>(null);
   const navigate = useNavigate();
-  const notificationsQuery = useQuery({
-    queryKey: ["my-jobs", "notifications"],
+
+  // Queries
+  const clientAppQuery = useQuery({
+    queryKey: ["my-jobs", "applications-notifications"],
     queryFn: () => fetchMyJobsRequest(true),
     enabled: user?.role === "client",
   });
 
+  const normalNotifQuery = useQuery({
+    queryKey: ["user-notifications"],
+    queryFn: fetchNotificationsRequest,
+    enabled: !!user,
+  });
+
   const notifications = useMemo(() => {
-    if (user?.role !== "client") {
-      return [];
+    if (!user) return [];
+
+    let combined: any[] = [];
+
+    // Client application notifications
+    if (user.role === "client" && clientAppQuery.data?.jobs) {
+      combined = [
+        ...combined,
+        ...clientAppQuery.data.jobs.flatMap((job) =>
+          (job.applications ?? []).map((application) => ({
+            id: `app-${application.id}`,
+            type: "application",
+            jobId: job.id,
+            freelancerName: application.freelancerName,
+            freelancerAvatar: application.freelancerAvatar,
+            title: job.title,
+            createdAt: application.createdAt,
+          })),
+        ),
+      ];
     }
 
-    return (notificationsQuery.data?.jobs ?? [])
-      .flatMap((job) =>
-        (job.applications ?? []).map((application) => ({
-          id: application.id,
-          title: job.title,
-          jobId: job.id,
-          freelancerName: application.freelancerName,
-          freelancerAvatar: application.freelancerAvatar,
-          createdAt: application.createdAt,
+    // Normal notifications
+    if (normalNotifQuery.data?.notifications) {
+      combined = [
+        ...combined,
+        ...normalNotifQuery.data.notifications.map((n) => ({
+          id: `notif-${n._id}`,
+          type: n.type === "job_invite" ? "job_invite" : "normal",
+          origNotification: n,
+          message: n.message,
+          createdAt: n.createdAt,
         })),
-      )
+      ];
+    }
+
+    return combined
       .sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
       .slice(0, 12);
-  }, [notificationsQuery.data?.jobs, user?.role]);
+  }, [clientAppQuery.data?.jobs, normalNotifQuery.data?.notifications, user]);
 
   if (!user) return null;
+
+  const isLoading = clientAppQuery.isLoading || normalNotifQuery.isLoading;
+  const isError = clientAppQuery.isError || normalNotifQuery.isError;
+  const errorMsg = clientAppQuery.error instanceof Error ? clientAppQuery.error.message : normalNotifQuery.error instanceof Error ? normalNotifQuery.error.message : "Unable to load notifications.";
 
   return (
     <div className="relative">
@@ -97,36 +134,63 @@ const NotificationBell = ({ dashboardBasePath }: { dashboardBasePath: string }) 
               <h4 className="text-sm font-semibold text-foreground">Notifications</h4>
             </div>
 
-            {notificationsQuery.isLoading ? <p className="p-4 text-center text-sm text-muted-foreground">Loading notifications...</p> : null}
+            {isLoading ? <p className="p-4 text-center text-sm text-muted-foreground">Loading notifications...</p> : null}
 
-            {notificationsQuery.isError ? (
+            {isError ? (
               <p className="p-4 text-center text-sm text-destructive">
-                {notificationsQuery.error instanceof Error ? notificationsQuery.error.message : "Unable to load notifications."}
+                {errorMsg}
               </p>
             ) : null}
 
-            {!notificationsQuery.isLoading && !notificationsQuery.isError && notifications.length === 0 ? (
+            {!isLoading && !isError && notifications.length === 0 ? (
               <p className="p-4 text-center text-sm text-muted-foreground">No notifications yet.</p>
             ) : null}
 
-            {!notificationsQuery.isLoading && !notificationsQuery.isError && notifications.length > 0 ? (
+            {!isLoading && !isError && notifications.length > 0 ? (
               <div className="divide-y divide-border">
                 {notifications.map((notification) => (
                   <button
                     key={notification.id}
                     onClick={() => {
                       setOpen(false);
-                      navigate(`${dashboardBasePath}/job/${notification.jobId}`);
+                      if (notification.type === "application") {
+                        navigate(`${dashboardBasePath}/job/${notification.jobId}`);
+                      } else if (notification.type === "job_invite") {
+                        setSelectedInvite(notification.origNotification);
+                      }
                     }}
                     className="w-full p-3 text-left transition-colors hover:bg-muted/25"
                   >
                     <div className="flex items-start gap-2.5">
-                      <img src={notification.freelancerAvatar} alt="" className="h-8 w-8 rounded-[6px] bg-muted object-cover shrink-0" />
+                      {notification.type === "application" && (
+                        <img src={notification.freelancerAvatar} alt="" className="h-8 w-8 rounded-[6px] bg-muted object-cover shrink-0" />
+                      )}
+                      
+                      {notification.type === "job_invite" && notification.origNotification?.senderId?.avatar && (
+                        <img src={notification.origNotification.senderId.avatar} alt="" className="h-8 w-8 rounded-[6px] bg-muted object-cover shrink-0" />
+                      )}
+
+                      {notification.type === "normal" && (
+                        <div className="flex shrink-0 h-8 w-8 rounded-[6px] items-center justify-center bg-primary/10 text-primary">
+                          <Zap className="h-4 w-4" />
+                        </div>
+                      )}
+
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-foreground">
-                          <span className="font-medium">{notification.freelancerName}</span> applied for{" "}
-                          <span className="font-medium">{notification.title}</span>
-                        </p>
+                        {notification.type === "application" ? (
+                          <p className="text-sm text-foreground">
+                            <span className="font-medium">{notification.freelancerName}</span> applied for{" "}
+                            <span className="font-medium">{notification.title}</span>
+                          </p>
+                        ) : notification.type === "job_invite" ? (
+                          <p className="text-sm text-foreground">
+                             <span className="font-medium">{notification.origNotification.senderId.fullName}</span> invited you to a job!
+                          </p>
+                        ) : (
+                          <p className="text-sm text-foreground">
+                             {notification.message}
+                          </p>
+                        )}
                         <p className="mt-1 text-xs text-muted-foreground">
                           {notification.createdAt ? new Date(notification.createdAt).toLocaleString() : "Recently"}
                         </p>
@@ -139,6 +203,13 @@ const NotificationBell = ({ dashboardBasePath }: { dashboardBasePath: string }) 
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      <InvitationModal
+        isOpen={!!selectedInvite}
+        onOpenChange={(open) => !open && setSelectedInvite(null)}
+        notification={selectedInvite}
+        dashboardBasePath={dashboardBasePath}
+      />
     </div>
   );
 };

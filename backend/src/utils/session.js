@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const ClientProfile = require("../models/ClientProfile");
 const FreelancerProfile = require("../models/FreelancerProfile");
 const User = require("../models/User");
-const { isPlainObject, sanitizePortfolio, sanitizeString, sanitizeStringArray } = require("./common");
+const { isPlainObject, normalizeRole, sanitizePortfolio, sanitizeString, sanitizeStringArray } = require("./common");
 
 const buildAvatarUrl = (seed = "proconnect") =>
   `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed || "proconnect")}`;
@@ -58,7 +58,7 @@ const serializeUser = (user, profiles = {}) => ({
   email: user.email,
   username: user.username,
   fullName: user.fullName,
-  role: user.role ?? null,
+  role: normalizeRole(user.role) || null,
   isVerified: user.isVerified,
   avatar: sanitizeString(user.avatar, 2000) || buildAvatarUrl(user.email || user.fullName || user._id.toString()),
   authProviders: resolveAuthProviders(user),
@@ -72,6 +72,12 @@ const loadUserSession = async (userOrId) => {
 
   if (!user) {
     return null;
+  }
+
+  const normalizedRole = normalizeRole(user.role);
+  if (normalizedRole && user.role !== normalizedRole) {
+    user.role = normalizedRole;
+    await user.save();
   }
 
   const [freelancerProfile, clientProfile] = await Promise.all([

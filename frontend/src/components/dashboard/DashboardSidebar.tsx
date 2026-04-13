@@ -44,6 +44,7 @@ export const DashboardSidebar = ({ onLinkClick, embedded }: DashboardSidebarProp
   const hirerItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: hirerBasePath },
     { label: "Find Talent", icon: Users, path: `${hirerBasePath}/talent` },
+    { label: "Saved Talents", icon: Bookmark, path: `${hirerBasePath}/saved-talents` },
     { label: "My Jobs", icon: Briefcase, path: `${hirerBasePath}/my-jobs` },
     { label: "Post a Job", icon: PlusCircle, path: `${hirerBasePath}/post-job` },
     { label: "Messages", icon: MessageSquareText, path: `${hirerBasePath}/messages` },

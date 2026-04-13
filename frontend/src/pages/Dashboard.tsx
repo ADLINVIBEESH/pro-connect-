@@ -10,6 +10,7 @@ import PostJob from "@/pages/dashboard/PostJob";
 import JobDetail from "@/pages/dashboard/JobDetail";
 import MyApplications from "@/pages/dashboard/MyApplications";
 import SavedJobs from "@/pages/dashboard/SavedJobs";
+import SavedTalents from "@/pages/client-dashboard/SavedTalents";
 import FreelancerProfile from "@/pages/dashboard/FreelancerProfile";
 import Profile from "@/pages/dashboard/Profile";
 import ContractsPlaceholder from "@/pages/dashboard/ContractsPlaceholder";
@@ -58,10 +59,12 @@ const Dashboard = () => {
           <Route path="job/:id" element={<JobDetail />} />
           <Route path="applications" element={<MyApplications />} />
           <Route path="saved" element={<SavedJobs />} />
+          <Route path="saved-talents" element={<SavedTalents />} />
           <Route path="contracts" element={<ContractsPlaceholder />} />
           <Route path="messages" element={<MessagesPlaceholder />} />
           <Route path="settings" element={<SettingsPlaceholder />} />
           <Route path="freelancer/:id" element={<FreelancerProfile />} />
+          <Route path="client/:id" element={<FreelancerProfile />} />
           <Route path="profile" element={<Profile />} />
           <Route
             path="profile-completion"
