@@ -3,6 +3,9 @@ const mongoose = require("mongoose");
 const requireAuth = require("../middleware/requireAuth");
 const Conversation = require("../models/Conversation");
 const ChatMessage = require("../models/ChatMessage");
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
 
 const router = express.Router();
 
@@ -64,6 +67,41 @@ router.post("/conversations", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Create/find conversation error:", error);
     return res.status(500).json({ message: "Unable to create conversation." });
+  }
+});
+
+// --- POST /api/chat/upload ---
+// Upload a file (base64) to the server local filesystem
+router.post("/upload", requireAuth, async (req, res) => {
+  try {
+    const { fileName, fileData } = req.body;
+    if (!fileName || !fileData) {
+      return res.status(400).json({ message: "File name and data are required." });
+    }
+
+    const matches = fileData.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      return res.status(400).json({ message: "Invalid file data format." });
+    }
+
+    const buffer = Buffer.from(matches[2], "base64");
+    const ext = path.extname(fileName) || "";
+    const safeName = crypto.randomUUID() + ext;
+    
+    // Create uploads directory if it doesn't exist
+    const uploadsDir = path.join(__dirname, "../../../uploads");
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const filePath = path.join(uploadsDir, safeName);
+    fs.writeFileSync(filePath, buffer);
+
+    const fileUrl = `/uploads/${safeName}`;
+    return res.status(200).json({ fileUrl });
+  } catch (error) {
+    console.error("Upload file error:", error);
+    return res.status(500).json({ message: "Unable to upload file." });
   }
 });
 
@@ -132,6 +170,10 @@ router.post("/:conversationId/messages", requireAuth, async (req, res) => {
       return res.status(403).json({ message: "Access denied." });
     }
 
+    if (conversation.blockedBy) {
+      return res.status(403).json({ message: "This chat is currently blocked." });
+    }
+
     const message = await ChatMessage.create({ conversationId, senderId: userId, text });
 
     // Update last message cache on conversation
@@ -146,6 +188,70 @@ router.post("/:conversationId/messages", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Send message error:", error);
     return res.status(500).json({ message: "Unable to send message." });
+  }
+});
+
+// --- DELETE /api/chat/:conversationId/messages ---
+// Clears all messages in a conversation
+router.delete("/:conversationId/messages", requireAuth, async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { conversationId } = req.params;
+
+    const conversation = await Conversation.findOne({
+      _id: conversationId,
+      participants: userId,
+    });
+
+    if (!conversation) {
+      return res.status(403).json({ message: "Access denied." });
+    }
+
+    await ChatMessage.deleteMany({ conversationId });
+    await Conversation.updateOne({ _id: conversationId }, { lastMessage: "", lastMessageAt: null });
+
+    return res.status(200).json({ message: "Chat cleared." });
+  } catch (error) {
+    console.error("Clear chat error:", error);
+    return res.status(500).json({ message: "Unable to clear chat." });
+  }
+});
+
+// --- PATCH /api/chat/:conversationId/block ---
+// Blocks or unblocks a conversation
+router.patch("/:conversationId/block", requireAuth, async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { conversationId } = req.params;
+    const { action } = req.body; // "block" or "unblock"
+
+    const conversation = await Conversation.findOne({
+      _id: conversationId,
+      participants: userId,
+    });
+
+    if (!conversation) {
+      return res.status(403).json({ message: "Access denied." });
+    }
+
+    if (action === "block") {
+      conversation.blockedBy = userId;
+    } else if (action === "unblock") {
+      // Only the user who blocked it can unblock it
+      if (conversation.blockedBy && conversation.blockedBy.toString() === userId.toString()) {
+        conversation.blockedBy = null;
+      } else {
+        return res.status(403).json({ message: "Only the blocker can unblock." });
+      }
+    } else {
+      return res.status(400).json({ message: "Invalid action." });
+    }
+
+    await conversation.save();
+    return res.status(200).json({ message: `Chat ${action}ed.` });
+  } catch (error) {
+    console.error("Block chat error:", error);
+    return res.status(500).json({ message: "Unable to toggle block status." });
   }
 });
 

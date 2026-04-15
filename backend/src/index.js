@@ -1,9 +1,12 @@
 const dns = require('dns');
 const path = require('path');
+const http = require('http');
 const mongoose = require('mongoose');
+const { Server: SocketIOServer } = require('socket.io');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 const createApp = require('./app');
 const { getTransportConfig, hasEmailConfig } = require('./config/email');
+const attachSignaling = require('./socketSignaling');
 
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
@@ -26,7 +29,23 @@ mongoose
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
+// ── HTTP + Socket.IO ────────────────────────────────────────────────────────
+const httpServer = http.createServer(app);
+
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: (process.env.FRONTEND_URL || 'http://localhost:8080')
+      .split(',')
+      .map((o) => o.trim())
+      .filter(Boolean),
+    methods: ['GET', 'POST'],
+  },
+});
+
+attachSignaling(io);
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
+  console.log(`[socket.io] signaling server ready`);
 });

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Bell, BriefcaseBusiness, CalendarClock, ImagePlus, Send, Trash2, X, Zap, Paperclip, Video, VideoOff, Mic, MicOff, Phone, Monitor, MonitorOff } from "lucide-react";
+import { ArrowLeft, Bell, BriefcaseBusiness, CalendarClock, ImagePlus, Send, Trash2, X, Zap, Paperclip, Video, VideoOff, Mic, MicOff, Phone, Monitor, MonitorOff, MoreVertical, Search, Ban } from "lucide-react";
 import Lottie from "lottie-react";
 import messageLottieData from "@/assets/message-lottie.json";
 import sendLottieData from "@/assets/send-lottie.json";
@@ -9,9 +9,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchMyJobsRequest } from "@/lib/networkApi";
 import { deleteAllNotificationsRequest, deleteNotificationRequest, fetchNotificationsRequest, type Notification } from "@/lib/userApi";
-import { getConversationsRequest, getMessagesRequest, sendMessageRequest, type Conversation } from "@/lib/chatApi";
+import { getConversationsRequest, getMessagesRequest, sendMessageRequest, clearChatRequest, blockChatRequest, uploadFileRequest, type Conversation } from "@/lib/chatApi";
+import { API_BASE_URL } from "@/lib/apiClient";
 import { cn } from "@/lib/utils";
 import { InvitationModal } from "@/components/dashboard/InvitationModal";
+import { useWebRTC } from "@/hooks/useWebRTC";
 
 type InboxTab = "chat" | "notifications";
 
@@ -54,18 +56,36 @@ const MessagesPlaceholder = () => {
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showMenu, setShowMenu] = useState(false);
+  const [viewingImageFile, setViewingImageFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isVideoCallActive, setIsVideoCallActive] = useState(false);
-  const [isVideoCallIncoming, setIsVideoCallIncoming] = useState(false);
-  const [callStartTime, setCallStartTime] = useState<number | null>(null);
-  const [callElapsed, setCallElapsed] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isCameraOff, setIsCameraOff] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const screenVideoRef = useRef<HTMLVideoElement>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const screenStreamRef = useRef<MediaStream | null>(null);
+
+  // ── WebRTC video call hook ─────────────────────────────────────────────────
+  const webrtc = useWebRTC(activeConversation?._id ?? null, user?.id ?? null);
+  const {
+    state: callState,
+    isMuted,
+    isCameraOff,
+    isScreenSharing,
+    callElapsed,
+    localVideoRef,
+    remoteVideoRef,
+    screenVideoRef,
+    startCall: webrtcStartCall,
+    acceptCall: webrtcAcceptCall,
+    declineCall: webrtcDeclineCall,
+    endCall: webrtcEndCall,
+    toggleMic,
+    toggleCamera,
+    toggleScreenShare,
+  } = webrtc;
+
+  // Map hook state to legacy booleans for the UI
+  const isVideoCallActive = callState === "calling" || callState === "connected";
+  const isVideoCallIncoming = callState === "incoming";
+  const callStartTime = callState === "connected" ? 1 : null; // truthy when connected
 
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(() => {
     try {
@@ -109,123 +129,25 @@ const MessagesPlaceholder = () => {
   // ── Scroll to bottom on new messages ────────────────────────────────────
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messagesQuery.data?.messages]);
+    if (!activeConversation) return;
+    
+    // Quick instant scroll immediately as the container mounts
+    const t1 = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    }, 50);
 
-  // ── Camera start/stop ───────────────────────────────────────────────────
+    // Smooth scroll catch-up after the 300ms Framer Motion entry animation finishes
+    const t2 = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 350);
+    
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [messagesQuery.data?.messages, activeConversation?._id]);
 
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      mediaStreamRef.current = stream;
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
-    } catch (err) {
-      console.error("Camera access denied:", err);
-    }
-  }, []);
-
-  const stopCamera = useCallback(() => {
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((t) => t.stop());
-      mediaStreamRef.current = null;
-    }
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = null;
-    }
-  }, []);
-
-  useEffect(() => {
-    if (callStartTime) {
-      startCamera();
-    } else {
-      stopCamera();
-    }
-    return () => stopCamera();
-  }, [callStartTime, startCamera, stopCamera]);
-
-  // ── Call timer ──────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (!callStartTime) { setCallElapsed(0); return; }
-    const iv = setInterval(() => setCallElapsed(Math.floor((Date.now() - callStartTime) / 1000)), 1000);
-    return () => clearInterval(iv);
-  }, [callStartTime]);
-
-  // ── Toggle mic / camera ────────────────────────────────────────────────
-
-  const toggleMic = useCallback(() => {
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getAudioTracks().forEach((t) => { t.enabled = !t.enabled; });
-      setIsMuted((p) => !p);
-    }
-  }, []);
-
-  const toggleCamera = useCallback(() => {
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getVideoTracks().forEach((t) => { t.enabled = !t.enabled; });
-      setIsCameraOff((p) => !p);
-    }
-  }, []);
-
-  // ── Screen sharing ─────────────────────────────────────────────────────
-
-  const stopScreenShare = useCallback(() => {
-    if (screenStreamRef.current) {
-      screenStreamRef.current.getTracks().forEach((t) => t.stop());
-      screenStreamRef.current = null;
-    }
-    if (screenVideoRef.current) {
-      screenVideoRef.current.srcObject = null;
-    }
-    setIsScreenSharing(false);
-  }, []);
-
-  const toggleScreenShare = useCallback(async () => {
-    if (isScreenSharing) {
-      stopScreenShare();
-      return;
-    }
-    try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
-      screenStreamRef.current = stream;
-      if (screenVideoRef.current) {
-        screenVideoRef.current.srcObject = stream;
-      }
-      setIsScreenSharing(true);
-      // Auto-stop when user clicks browser's native "Stop sharing" button
-      stream.getVideoTracks()[0].addEventListener("ended", () => {
-        stopScreenShare();
-      });
-    } catch (err) {
-      console.error("Screen share denied:", err);
-    }
-  }, [isScreenSharing, stopScreenShare]);
-
-  // ── Video Call sync ───────────────────────────────────────────────────────
-  
-  useEffect(() => {
-    const msgs = messagesQuery.data?.messages;
-    if (!msgs || !msgs.length) return;
-    const lastMsg = msgs[msgs.length - 1];
-    const isMe = lastMsg.senderId._id === user?.id || (lastMsg.senderId as any) === user?.id;
-
-    if (lastMsg.text === "📞 CALL_ACCEPTED") {
-      if (!isMe && isVideoCallActive && !callStartTime) {
-         setCallStartTime(Date.now());
-      }
-    } else if (lastMsg.text.startsWith("📞 Video call ended") || lastMsg.text.startsWith("📞 Video call declined") || lastMsg.text.startsWith("📞 Missed call")) {
-      setIsVideoCallIncoming(false);
-      setIsVideoCallActive(false);
-      setCallStartTime(null);
-    } else if (lastMsg.text === "📞 INCOMING_CALL" && !isMe) {
-      const ageMs = Date.now() - new Date(lastMsg.createdAt).getTime();
-      if (ageMs < 45000 && !isVideoCallActive && !isVideoCallIncoming) {
-        setIsVideoCallIncoming(true);
-      }
-    }
-  }, [messagesQuery.data?.messages, user?.id, isVideoCallActive, callStartTime, isVideoCallIncoming]);
+  // All camera/mic/screen/call logic is now handled by the useWebRTC hook above.
 
   // ── Mutations ─────────────────────────────────────────────────────────────
 
@@ -235,6 +157,23 @@ const MessagesPlaceholder = () => {
       queryClient.invalidateQueries({ queryKey: ["chat-messages", activeConversation?._id] });
       queryClient.invalidateQueries({ queryKey: ["chat-conversations"] });
       setMessageText("");
+    },
+  });
+
+  const clearChatMutation = useMutation({
+    mutationFn: clearChatRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chat-messages", activeConversation?._id] });
+      queryClient.invalidateQueries({ queryKey: ["chat-conversations"] });
+      setSearchQuery("");
+      setShowSearch(false);
+    },
+  });
+
+  const blockChatMutation = useMutation({
+    mutationFn: ({ action }: { action: "block" | "unblock" }) => blockChatRequest(activeConversation!._id, action),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chat-conversations"] });
     },
   });
 
@@ -285,6 +224,46 @@ const MessagesPlaceholder = () => {
     const text = messageText.trim();
     if (!text || !activeConversation || sendMessageMutation.isPending) return;
     sendMessageMutation.mutate({ text });
+  };
+
+  const handleDownloadFile = async (rawText: string) => {
+    const parts = rawText.split("::");
+    const fileName = parts[0];
+    const fileUrl = parts[1];
+
+    if (fileUrl) {
+      try {
+        const response = await fetch(`${API_BASE_URL}${fileUrl}`);
+        if (!response.ok) throw new Error("Network response was not ok");
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("Failed to download real file:", err);
+        alert("Failed to download the file from server.");
+      }
+    } else {
+      // Fallback for old mock files
+      const blob = new Blob(["File content placeholder for " + fileName], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const isImageFile = (fileName: string) => {
+    return /\.(png|jpe?g|gif|webp)$/i.test(fileName);
   };
 
   // ── Derived data ───────────────────────────────────────────────────────────
@@ -350,6 +329,12 @@ const MessagesPlaceholder = () => {
 
   const conversations = conversationsQuery.data?.conversations ?? [];
   const messages = messagesQuery.data?.messages ?? [];
+
+  const filteredMessages = useMemo(() => {
+    const base = messages.filter(m => m.text !== "📞 INCOMING_CALL" && m.text !== "📞 CALL_ACCEPTED");
+    if (!showSearch || !searchQuery.trim()) return base;
+    return base.filter(m => m.text.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [messages, showSearch, searchQuery]);
 
   // ── Chat helpers ───────────────────────────────────────────────────────────
 
@@ -427,7 +412,7 @@ const MessagesPlaceholder = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="absolute inset-0 overflow-hidden flex flex-col rounded-[20px] border border-border bg-card shadow-xl dark:shadow-none"
+                className="absolute inset-0 overflow-hidden flex flex-col rounded-[20px] border border-white/5 bg-[#10111a]/95 shadow-2xl"
               >
                 <AnimatePresence mode="wait">
                   {activeConversation ? (
@@ -438,10 +423,10 @@ const MessagesPlaceholder = () => {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
                       transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="flex h-full flex-col w-full bg-card"
+                      className="flex h-full flex-col w-full bg-transparent relative"
                     >
                       {/* Header */}
-                      <div className="flex z-10 items-center justify-between border-b border-border bg-card/80 backdrop-blur-md px-5 py-3.5 sticky top-0">
+                      <div className="flex z-10 items-center justify-between border-b-0 bg-transparent px-5 py-4 sticky top-0">
                         <div className="flex items-center gap-4">
                           <button
                             type="button"
@@ -471,21 +456,126 @@ const MessagesPlaceholder = () => {
                             ) : null;
                           })()}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsVideoCallActive(true);
-                            sendMessageMutation.mutate({ text: "📞 INCOMING_CALL" });
-                          }}
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-primary transition-all hover:bg-primary hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          title="Start Video Call"
-                        >
-                          <Video className="h-5 w-5" />
-                        </button>
+                        <div className="flex items-center gap-2 relative">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await webrtcStartCall();
+                              sendMessageMutation.mutate({ text: "📞 INCOMING_CALL" });
+                            }}
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#12c2e9] via-[#c471ed] to-[#f64f59] text-white shadow-[0_0_20px_rgba(196,113,237,0.4)] transition-all hover:scale-105 active:scale-95"
+                            title="Start Video Call"
+                          >
+                            <Video className="h-5 w-5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowMenu((p) => !p)}
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/5 text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all"
+                            title="More options"
+                          >
+                            <MoreVertical className="h-5 w-5" />
+                          </button>
+
+                          <AnimatePresence>
+                            {showMenu && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                transition={{ type: "spring", bounce: 0.35, duration: 0.3 }}
+                                className="absolute top-14 right-0 z-50 flex flex-col gap-1 rounded-2xl border border-white/10 bg-[#151722]/95 backdrop-blur-xl p-2 shadow-2xl min-w-[180px]"
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => { setShowSearch((p) => !p); setShowMenu(false); }}
+                                  className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-foreground hover:bg-white/5 transition-colors w-full text-left"
+                                >
+                                  <Search className="h-4 w-4 text-blue-400" /> {showSearch ? "Close search" : "Search in chat"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (window.confirm("Are you sure you want to clear this entire chat? This action cannot be undone.")) {
+                                      clearChatMutation.mutate(activeConversation._id);
+                                    }
+                                    setShowMenu(false);
+                                  }}
+                                  className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-foreground hover:bg-white/5 transition-colors w-full text-left"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-500" /> Clear chat
+                                </button>
+                                {activeConversation.blockedBy ? (
+                                  activeConversation.blockedBy === user?.id ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        blockChatMutation.mutate({ action: "unblock" });
+                                        setShowMenu(false);
+                                      }}
+                                      className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-foreground hover:bg-white/5 transition-colors w-full text-left"
+                                    >
+                                      <Ban className="h-4 w-4 text-orange-500" /> Unblock chat
+                                    </button>
+                                  ) : (
+                                    <button
+                                      disabled
+                                      type="button"
+                                      className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-muted-foreground/50 cursor-not-allowed w-full text-left"
+                                    >
+                                      <Ban className="h-4 w-4 text-orange-500/50" /> Blocked by other
+                                    </button>
+                                  )
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      blockChatMutation.mutate({ action: "block" });
+                                      setShowMenu(false);
+                                    }}
+                                    className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-foreground hover:bg-white/5 transition-colors w-full text-left"
+                                  >
+                                    <Ban className="h-4 w-4 text-orange-500" /> Block chat
+                                  </button>
+                                )}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       </div>
 
+                      {/* Search Bar Dropdown */}
+                      <AnimatePresence>
+                        {showSearch && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="bg-black/20 border-b border-border/40 overflow-hidden shrink-0 z-10 relative"
+                          >
+                            <div className="p-3 flex items-center gap-3">
+                              <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <input
+                                  type="text"
+                                  autoFocus
+                                  value={searchQuery}
+                                  onChange={(e) => setSearchQuery(e.target.value)}
+                                  placeholder="Search messages..."
+                                  className="w-full bg-white/5 border border-white/10 rounded-full pl-9 pr-4 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                                />
+                              </div>
+                              <button onClick={() => { setShowSearch(false); setSearchQuery(""); }} className="text-muted-foreground hover:text-white mx-2">
+                                <X className="h-5 w-5" />
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
                       {/* Messages */}
-                      <div className="flex-1 overflow-y-auto scrollbar-hide px-5 py-6 space-y-4 bg-muted/10 relative scroll-smooth">
+                      <div className="flex-1 overflow-y-auto scrollbar-hide px-5 py-6 space-y-5 bg-transparent relative scroll-smooth">
                         {messagesQuery.isLoading && (
                           <div className="flex justify-center py-10">
                             <motion.div
@@ -495,7 +585,7 @@ const MessagesPlaceholder = () => {
                             />
                           </div>
                         )}
-                        {!messagesQuery.isLoading && messages.length === 0 && (
+                        {!messagesQuery.isLoading && filteredMessages.length === 0 && (
                           <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -504,18 +594,33 @@ const MessagesPlaceholder = () => {
                             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[20px] bg-primary/10 text-primary">
                               <Lottie animationData={messageLottieData} loop={true} className="h-10 w-10 drop-shadow-sm" />
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground">No messages yet</h3>
-                            <p className="mt-2 text-sm text-muted-foreground">Start the conversation by saying hello! 👋</p>
+                            <h3 className="text-lg font-semibold text-foreground">
+                              {showSearch && searchQuery.trim() ? "No messages found" : "No messages yet"}
+                            </h3>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              {showSearch && searchQuery.trim() ? "Try searching for a different word." : "Start the conversation by saying hello! 👋"}
+                            </p>
                           </motion.div>
                         )}
                         <AnimatePresence initial={false}>
-                          {messages.filter(m => m.text !== "📞 INCOMING_CALL" && m.text !== "📞 CALL_ACCEPTED").map((msg) => {
+                          {filteredMessages.map((msg) => {
                             const isMe = msg.senderId._id === user?.id || (msg.senderId as any) === user?.id;
                             const isSchedule = msg.text.startsWith("📅");
                             const isFile = msg.text.startsWith("📎");
                             const isCallLog = msg.text.startsWith("📞");
 
                             if (isSchedule || isFile || isCallLog) {
+                              const rawText = msg.text.replace(/^📅\s*/, "").replace(/^📎\s*Shared a file:\s*/, "").replace(/^📞\s*/, "");
+                              let displayText = rawText;
+                              let fileUrl = "";
+                              if (isFile && rawText.includes("::")) {
+                                const parts = rawText.split("::");
+                                displayText = parts[0];
+                                fileUrl = parts[1];
+                              }
+                              
+                              const fileIsImage = isFile ? isImageFile(displayText) : false;
+
                               return (
                                 <motion.div
                                   key={msg._id}
@@ -524,21 +629,35 @@ const MessagesPlaceholder = () => {
                                   transition={{ duration: 0.3, type: "spring", bounce: 0.35 }}
                                   className={cn("flex px-4 w-full", isMe ? "justify-end" : "justify-start")}
                                 >
-                                  <div className="w-fit max-w-[85%] rounded-[12px] border border-primary/15 bg-primary/5 backdrop-blur-sm px-2.5 py-1.5 shadow-sm">
-                                    <div className="flex items-center gap-2">
+                                  <div 
+                                    className={cn(
+                                      "w-fit max-w-[85%] rounded-[16px] border border-white/5 bg-white/5 backdrop-blur-md px-3.5 py-2.5 shadow-xl transition-all",
+                                      isFile ? "cursor-pointer hover:bg-white/10 hover:border-white/10 active:scale-[0.98]" : ""
+                                    )}
+                                    onClick={() => {
+                                      if (isFile) {
+                                        if (fileIsImage) {
+                                          setViewingImageFile(rawText);
+                                        } else {
+                                          handleDownloadFile(rawText);
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-3">
                                       <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] text-[14px]", isCallLog ? "bg-emerald-500/10 text-emerald-600" : "bg-primary/10")}>
-                                        {isSchedule ? "📅" : isFile ? "📎" : "📞"}
+                                        {isSchedule ? "📅" : fileIsImage ? "🖼️" : isFile ? "📎" : "📞"}
                                       </div>
                                       <div className="flex-1 min-w-0 py-0.5">
                                         <p className="text-[8px] font-bold uppercase tracking-widest text-primary/70 mb-0.5">
-                                          {isSchedule ? "Meeting Scheduled" : isFile ? "File Shared" : "Call Status"}
+                                          {isSchedule ? "Meeting Scheduled" : isFile ? (fileIsImage ? "Image Shared" : "Document Shared") : "Call Status"}
                                         </p>
                                         <p className="text-[12px] text-foreground font-medium leading-[1.3]">
-                                          {msg.text.replace(/^📅\s*/, "").replace(/^📎\s*/, "").replace(/^📞\s*/, "")}
+                                          {displayText}
                                         </p>
                                       </div>
                                     </div>
-                                    <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-primary/10">
+                                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/10">
                                       <span className="text-[8px] text-muted-foreground font-medium">
                                         Sent by {isMe ? "you" : msg.senderId.fullName}
                                       </span>
@@ -569,10 +688,10 @@ const MessagesPlaceholder = () => {
                                 <div className={cn("max-w-[75%]", isMe ? "items-end" : "items-start", "flex flex-col gap-1")}>
                                   <div
                                     className={cn(
-                                      "px-4 py-3 text-[0.92rem] leading-relaxed shadow-sm",
+                                      "px-5 py-3 text-[0.95rem] leading-relaxed shadow-md",
                                       isMe
-                                        ? "rounded-[20px] rounded-br-sm bg-gradient-to-tr from-primary to-accent text-primary-foreground dark:from-primary dark:to-primary"
-                                        : "rounded-[20px] rounded-bl-sm bg-card border border-border text-foreground",
+                                        ? "rounded-[20px] rounded-br-sm bg-gradient-to-tr from-[#12c2e9] via-[#c471ed] to-[#f64f59] text-white shadow-[0_0_20px_rgba(196,113,237,0.4)]"
+                                        : "rounded-[20px] rounded-bl-sm bg-white/10 backdrop-blur-md border border-white/5 text-white",
                                     )}
                                   >
                                     {msg.text}
@@ -676,25 +795,54 @@ const MessagesPlaceholder = () => {
                       <input ref={fileInputRef} type="file" accept="image/*,video/*,.pdf,.doc,.docx" className="hidden" onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file && activeConversation) {
-                          sendMessageMutation.mutate({ text: `📎 Shared a file: ${file.name}` });
+                          if (file.size > 10 * 1024 * 1024) {
+                            alert("File is too large. Max size is 10MB.");
+                            return;
+                          }
+                          
+                          const reader = new FileReader();
+                          reader.onload = async (event) => {
+                            const dataUrl = event.target?.result as string;
+                            try {
+                              const response = await uploadFileRequest(file.name, dataUrl);
+                              sendMessageMutation.mutate({ text: `📎 Shared a file: ${file.name}::${response.fileUrl}` });
+                            } catch (err) {
+                              console.error("Upload failed", err);
+                              alert("File upload failed.");
+                            }
+                          };
+                          reader.readAsDataURL(file);
                         }
                         e.target.value = "";
                       }} />
 
                       {/* Message input */}
-                      <form
-                        onSubmit={handleSendMessage}
-                        className="flex items-end gap-2 border-t border-border bg-card/80 backdrop-blur-md px-4 py-4 z-10"
-                      >
-                        {/* Attach button */}
-                        <div className="relative">
+                      {activeConversation.blockedBy ? (
+                        <div className="flex items-center justify-center px-4 py-5 z-10 w-full mb-1">
+                          <div className="flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-3.5 text-muted-foreground shadow-lg">
+                            <Ban className="h-5 w-5 text-orange-500" />
+                            <span className="text-[0.95rem] font-medium text-white/80">
+                              {activeConversation.blockedBy === user?.id
+                                ? "You blocked this chat. Unblock from the menu to send messages."
+                                : "This chat is blocked."}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <form
+                          onSubmit={handleSendMessage}
+                          className="flex items-end gap-3 px-4 py-5 z-10"
+                        >
+                        {/* Attach button & input combined */}
+                        <div className="flex-1 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl px-2 py-1.5 shadow-lg focus-within:bg-white/10 focus-within:border-white/20 transition-all relative">
                           <button
                             type="button"
                             onClick={() => { setShowAttachMenu((p) => !p); setShowScheduler(false); }}
-                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted/60 text-muted-foreground transition-all hover:bg-muted hover:text-foreground hover:scale-105 active:scale-95"
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-all"
                           >
-                            <Paperclip className="h-5 w-5" />
+                            <Paperclip className="h-[22px] w-[22px]" />
                           </button>
+
                           <AnimatePresence>
                             {showAttachMenu && (
                               <motion.div
@@ -702,33 +850,32 @@ const MessagesPlaceholder = () => {
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.9 }}
                                 transition={{ type: "spring", bounce: 0.35, duration: 0.3 }}
-                                className="absolute bottom-14 left-0 z-40 flex flex-col gap-1 rounded-2xl border border-border bg-card/95 backdrop-blur-xl p-2 shadow-2xl min-w-[160px]"
+                                className="absolute bottom-16 left-0 z-40 flex flex-col gap-1 rounded-2xl border border-white/10 bg-[#151722]/95 backdrop-blur-xl p-2 shadow-2xl min-w-[160px]"
                               >
                                 <button
                                   type="button"
                                   onClick={() => { fileInputRef.current?.click(); setShowAttachMenu(false); }}
-                                  className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors"
+                                  className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-foreground hover:bg-white/5 transition-colors"
                                 >
                                   <ImagePlus className="h-4 w-4 text-emerald-500" /> Gallery
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => { setShowScheduler(true); setShowAttachMenu(false); }}
-                                  className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors"
+                                  className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-foreground hover:bg-white/5 transition-colors"
                                 >
                                   <CalendarClock className="h-4 w-4 text-blue-500" /> Schedule
                                 </button>
                               </motion.div>
                             )}
                           </AnimatePresence>
-                        </div>
-                        <div className="relative flex-1">
+
                           <input
                             type="text"
                             value={messageText}
                             onChange={(e) => setMessageText(e.target.value)}
                             placeholder="Type a message..."
-                            className="w-full rounded-[24px] border border-border bg-muted/50 px-5 py-3.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-[3px] focus:ring-primary/20 focus:bg-background transition-all"
+                            className="w-full bg-transparent px-2 py-2.5 text-[0.95rem] text-white placeholder:text-muted-foreground outline-none border-none ring-0"
                             onKeyDown={(e) => {
                               if (e.key === "Enter" && !e.shiftKey) {
                                 e.preventDefault();
@@ -746,6 +893,7 @@ const MessagesPlaceholder = () => {
                           <Lottie animationData={sendLottieData} loop={true} className="h-6 w-6 relative left-[-2px]" />
                         </button>
                       </form>
+                      )}
 
                       {/* Video Call Overlay */}
                       <AnimatePresence>
@@ -782,7 +930,7 @@ const MessagesPlaceholder = () => {
                                       <button
                                         type="button"
                                         onClick={() => {
-                                          setIsVideoCallIncoming(false);
+                                          webrtcDeclineCall();
                                           sendMessageMutation.mutate({ text: "📞 Video call declined" });
                                         }}
                                         className="flex flex-col items-center gap-2 group focus:outline-none"
@@ -795,10 +943,8 @@ const MessagesPlaceholder = () => {
                                       
                                       <button
                                         type="button"
-                                        onClick={() => {
-                                          setIsVideoCallIncoming(false);
-                                          setIsVideoCallActive(true);
-                                          setCallStartTime(Date.now());
+                                        onClick={async () => {
+                                          await webrtcAcceptCall();
                                           sendMessageMutation.mutate({ text: "📞 CALL_ACCEPTED" });
                                         }}
                                         className="flex flex-col items-center gap-2 group focus:outline-none"
@@ -821,17 +967,28 @@ const MessagesPlaceholder = () => {
 
                                 return (
                                   <div className="relative flex h-full w-full flex-col bg-black rounded-[20px] overflow-hidden">
-                                    {/* Screen share feed (replaces camera as main view when active) */}
+                                    {/* Remote peer's video — main view */}
+                                    <video
+                                      ref={remoteVideoRef}
+                                      autoPlay
+                                      playsInline
+                                      className={cn(
+                                        "absolute inset-0 h-full w-full z-[1] transition-all duration-300",
+                                        webrtc.remoteScreenSharing ? "object-contain bg-black" : "object-cover"
+                                      )}
+                                    />
+
+                                    {/* Screen share feed (replaces remote as main view when active) */}
                                     {isScreenSharing && (
                                       <video
                                         ref={screenVideoRef}
                                         autoPlay
                                         playsInline
-                                        className="absolute inset-0 h-full w-full object-contain bg-black z-[1]"
+                                        className="absolute inset-0 h-full w-full object-contain bg-black z-[2]"
                                       />
                                     )}
 
-                                    {/* Camera feed — full bg normally, small PiP when screen sharing */}
+                                    {/* Local camera feed — small PiP in bottom-right */}
                                     <video
                                       ref={localVideoRef}
                                       autoPlay
@@ -839,15 +996,24 @@ const MessagesPlaceholder = () => {
                                       muted
                                       className={cn(
                                         isCameraOff && "hidden",
-                                        isScreenSharing
-                                          ? "absolute bottom-24 right-4 z-[5] h-32 w-44 rounded-2xl object-cover shadow-2xl ring-2 ring-white/20"
-                                          : "absolute inset-0 h-full w-full object-cover"
+                                        "absolute bottom-24 right-4 z-[5] h-32 w-44 rounded-2xl object-cover shadow-2xl ring-2 ring-white/20"
                                       )}
                                     />
-                                    {isCameraOff && !isScreenSharing && (
-                                      <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-                                        <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gray-700 text-white text-4xl font-bold">
+                                    {isCameraOff && (
+                                      <div className="absolute bottom-24 right-4 z-[5] flex h-32 w-44 items-center justify-center rounded-2xl bg-gray-800 shadow-2xl ring-2 ring-white/20">
+                                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-700 text-white text-2xl font-bold">
                                           {user?.name?.[0]?.toUpperCase() ?? "?"}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {/* Show placeholder when no remote video yet */}
+                                    {(!webrtc.remoteStream || webrtc.remoteStream.getTracks().length === 0) && (
+                                      <div className="absolute inset-0 z-[0] flex items-center justify-center bg-gray-900">
+                                        <div className="flex flex-col items-center gap-3">
+                                          <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gray-700 text-white text-4xl font-bold">
+                                            {other?.fullName?.[0]?.toUpperCase() ?? "?"}
+                                          </div>
+                                          <p className="text-white/60 text-sm">Connecting...</p>
                                         </div>
                                       </div>
                                     )}
@@ -907,15 +1073,11 @@ const MessagesPlaceholder = () => {
                                       <button
                                         type="button"
                                         onClick={() => {
-                                          const dur = callStartTime ? Math.floor((Date.now() - callStartTime) / 1000) : 0;
+                                          const dur = callElapsed;
                                           const m = Math.floor(dur / 60);
                                           const s = dur % 60;
                                           const timeStr = dur > 0 ? `(${m}m ${s}s)` : "";
-                                          stopScreenShare();
-                                          setIsVideoCallActive(false);
-                                          setCallStartTime(null);
-                                          setIsMuted(false);
-                                          setIsCameraOff(false);
+                                          webrtcEndCall();
                                           sendMessageMutation.mutate({ text: `📞 Video call ended ${timeStr}` });
                                         }}
                                         className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 transition-all hover:scale-110 active:scale-95"
@@ -956,8 +1118,7 @@ const MessagesPlaceholder = () => {
                                     <button
                                       type="button"
                                       onClick={() => {
-                                        setIsVideoCallActive(false);
-                                        setCallStartTime(null);
+                                        webrtcEndCall();
                                         sendMessageMutation.mutate({ text: "📞 Missed call" });
                                       }}
                                       className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 transition-all hover:scale-105 active:scale-95"
@@ -1252,6 +1413,53 @@ const MessagesPlaceholder = () => {
                 >
                   {deleteAllNotificationsMutation.isPending ? "Emptying..." : "Yes, empty it"}
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {viewingImageFile && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md" onClick={() => setViewingImageFile(null)}>
+            <div className="absolute top-6 right-6 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDownloadFile(viewingImageFile);
+                }}
+                className="flex items-center gap-2 rounded-full bg-primary/20 text-primary hover:bg-primary/30 px-5 py-2.5 font-semibold transition-all backdrop-blur-md border border-primary/20"
+              >
+                Download
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewingImageFile(null)}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all backdrop-blur-md"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", bounce: 0.3 }}
+              className="max-h-full max-w-full relative flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative rounded-[24px] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-card border-none">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center -z-10">
+                    <ImagePlus className="w-16 h-16 text-primary/30" />
+                </div>
+                <img
+                  src={viewingImageFile?.includes("::") ? `${API_BASE_URL}${viewingImageFile.split("::")[1]}` : `https://picsum.photos/seed/${encodeURIComponent(viewingImageFile || "")}/1200/800`}
+                  alt={viewingImageFile?.split("::")[0] || viewingImageFile || ""}
+                  className="max-h-[85vh] max-w-[90vw] object-contain rounded-[24px]"
+                />
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-6 pt-12">
+                  <p className="text-white font-medium text-lg drop-shadow-md truncate">{viewingImageFile?.split("::")[0] || viewingImageFile}</p>
+                </div>
               </div>
             </motion.div>
           </div>

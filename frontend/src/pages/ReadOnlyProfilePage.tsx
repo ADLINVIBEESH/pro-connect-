@@ -1,7 +1,7 @@
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { CheckCircle2, BookmarkPlus, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, BookmarkPlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchReadOnlyProfileRequest, notifyUserRequest, saveFreelancerRequest } from "@/lib/userApi";
 import { fetchMyJobsRequest } from "@/lib/networkApi";
@@ -10,20 +10,21 @@ import { useState } from "react";
 import { sanitizeClientProfileData } from "@/lib/clientProfileCompletion";
 import { sanitizeProfileData } from "@/lib/profileCompletion";
 import { DashboardTopbar } from "@/components/dashboard/DashboardTopbar";
-import DashboardFooter from "@/components/dashboard/DashboardFooter";
+
 import FreelancerSelfProfileView from "@/components/profile/FreelancerSelfProfileView";
 import ClientSelfProfileView from "@/components/profile/ClientSelfProfileView";
 
 const ReadOnlyProfilePage = () => {
   const { userId = "" } = useParams();
   const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const profileQuery = useQuery({
     queryKey: ["read-only-profile", userId],
     queryFn: () => fetchReadOnlyProfileRequest(userId),
     enabled: Boolean(userId),
   });
-  const shouldShowFooter = profileQuery.data?.role === "freelancer";
+
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState("");
 
@@ -67,6 +68,14 @@ const ReadOnlyProfilePage = () => {
       <div className="flex min-h-screen flex-col">
         <DashboardTopbar />
         <main className="mx-auto w-full max-w-[1520px] flex-1 px-4 py-5 lg:px-8 lg:py-6">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="mb-4 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
           {profileQuery.isLoading ? <p className="py-12 text-center text-sm text-muted-foreground">Loading profile...</p> : null}
 
           {profileQuery.isError ? (
@@ -195,11 +204,6 @@ const ReadOnlyProfilePage = () => {
             <p className="py-12 text-center text-sm text-muted-foreground">Profile not found.</p>
           ) : null}
         </main>
-        {shouldShowFooter ? (
-          <div className="mx-auto w-full max-w-[1520px] px-4 pb-6 lg:px-8">
-            <DashboardFooter />
-          </div>
-        ) : null}
       </div>
     </div>
   );

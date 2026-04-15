@@ -40,6 +40,9 @@ const createApp = () => {
     res.json({ message: "ProConnect backend running!" });
   });
 
+  const path = require("path");
+  app.use("/uploads", express.static(path.join(__dirname, "../../uploads")));
+
   app.use("/api/auth", authRoutes);
   app.use("/api/users", userRoutes);
   app.use("/api/chat", chatRoutes);

@@ -58,17 +58,17 @@ const ProfileSetup: React.FC = () => {
 
   const handleNext = () => {
     if (canProceedToNext() && currentStep < 7) {
-      setCurrentStep(currentStep + 1);
+      setCurrentStep((currentStep + 1) as ProfileSetupStep);
     }
   };
 
   const handlePrevious = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      setCurrentStep((currentStep - 1) as ProfileSetupStep);
     }
   };
 
-  const updateStepData = (step: ProfileSetupStep, data: any) => {
+  const updateStepData = (step: ProfileSetupStep, data: unknown) => {
     setProfileData(prev => ({
       ...prev,
       [`step${step}`]: data

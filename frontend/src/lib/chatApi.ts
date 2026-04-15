@@ -15,6 +15,7 @@ export type Conversation = {
   lastMessage: string;
   lastMessageAt?: string;
   createdAt: string;
+  blockedBy?: string | null;
 };
 
 export type ChatMessage = {
@@ -42,4 +43,21 @@ export const sendMessageRequest = (conversationId: string, text: string) =>
   apiRequest<{ message: ChatMessage }>(`/api/chat/${conversationId}/messages`, {
     method: "POST",
     body: { text },
+  });
+
+export const uploadFileRequest = (fileName: string, fileData: string) =>
+  apiRequest<{ fileUrl: string }>("/api/chat/upload", {
+    method: "POST",
+    body: { fileName, fileData },
+  });
+
+export const clearChatRequest = (conversationId: string) =>
+  apiRequest<{ message: string }>(`/api/chat/${conversationId}/messages`, {
+    method: "DELETE",
+  });
+
+export const blockChatRequest = (conversationId: string, action: "block" | "unblock") =>
+  apiRequest<{ message: string }>(`/api/chat/${conversationId}/block`, {
+    method: "PATCH",
+    body: { action },
   });
