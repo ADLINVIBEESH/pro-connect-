@@ -32,12 +32,23 @@ mongoose
 // ── HTTP + Socket.IO ────────────────────────────────────────────────────────
 const httpServer = http.createServer(app);
 
+const allowedSocketOrigins = (process.env.FRONTEND_URL || 'http://localhost:8080')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: (process.env.FRONTEND_URL || 'http://localhost:8080')
-      .split(',')
-      .map((o) => o.trim())
-      .filter(Boolean),
+    origin: (origin, callback) => {
+      if (!origin || allowedSocketOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      // Allow all origins in development
+      if (process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
     methods: ['GET', 'POST'],
   },
 });
@@ -45,7 +56,7 @@ const io = new SocketIOServer(httpServer, {
 attachSignaling(io);
 
 const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
+httpServer.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server listening on http://0.0.0.0:${PORT}`);
   console.log(`[socket.io] signaling server ready`);
 });
