@@ -30,7 +30,6 @@ services:
   - type: web
     name: proconnect-frontend
     runtime: static
-    region: singapore
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
