@@ -4,7 +4,7 @@ services:
   - type: web
     name: proconnect-backend
     runtime: node
-    region: singapore          # change to your preferred region
+    region: india         # change to your preferred region
     plan: free
     rootDir: backend
     buildCommand: npm install
