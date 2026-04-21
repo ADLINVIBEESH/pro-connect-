@@ -8,7 +8,6 @@ if (!fs.existsSync(path)) {
 
 const content = fs.readFileSync(path, 'utf8');
 
-// The JSON string starts with {"v":"5.3.4" and ends before "replace this button"
 const startIndex = content.lastIndexOf('{"v":"5.3.4"');
 let jsonStr = "";
 
